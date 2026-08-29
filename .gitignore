@@ -10,9 +10,15 @@
 !.yarn/releases
 !.yarn/versions
 
-# ai slop
-/.codex/
-/.claude/
+# Shared AI development configuration
+# Keep machine-local state ignored while allowing the project-scoped agent
+# definitions created for this repository to be reviewed and versioned.
+/.codex/*
+!/.codex/agents/
+!/.codex/agents/*.toml
+/.claude/*
+!/.claude/agents/
+!/.claude/agents/*.md
 /.agents/
 
 # testing
@@ -37,6 +43,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel

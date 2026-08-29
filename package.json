@@ -6,25 +6,56 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "db:generate": "drizzle-kit generate",
+    "db:check": "drizzle-kit check",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "node --env-file-if-exists=.env --experimental-strip-types --no-warnings=MODULE_TYPELESS_PACKAGE_JSON db/seed.mts"
   },
   "dependencies": {
     "@monaco-editor/react": "4.8.0-rc.3",
+    "@supabase/pg-parser": "^0.1.7",
     "@xyflow/react": "^12.11.5",
+    "drizzle-orm": "^0.45.2",
+    "elkjs": "^0.12.0",
     "gsap": "^3.15.0",
     "next": "16.3.3",
+    "pg": "^8.23.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "react-resizable-panels": "^4.12.3",
+    "zod": "4.1.12"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.6",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
+    "jsdom": "^30.0.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   },
-  "packageManager": "pnpm@10.33.4"
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "packageManager": "pnpm@10.33.4",
+  "pnpm": {
+    "overrides": {
+      "zod": "4.1.12"
+    }
+  }
 }
