@@ -1,0 +1,14 @@
+{
+  "fixtureVersion": 1,
+  "outcome": "syntax-error",
+  "features": ["malformed-supported-statement", "alter-table-add-constraint", "table-foreign-key"],
+  "namespaces": [],
+  "diagnostics": [{
+    "code": "PGSD1001",
+    "severity": "error",
+    "messageIntent": "Expected a closing parenthesis after the referenced column list.",
+    "span": { "anchor": "ON DELETE", "startLine": 6 },
+    "why": "The REFERENCES column list opened with a parenthesis that was not closed.",
+    "how": "Write REFERENCES parents (id) ON DELETE CASCADE."
+  }]
+}

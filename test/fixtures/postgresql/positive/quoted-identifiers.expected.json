@@ -1,0 +1,20 @@
+{
+  "fixtureVersion": 1,
+  "outcome": "parse-success",
+  "features": ["create-table", "quoted-identifiers", "unquoted-identifiers", "identifier-normalization", "built-in-types", "type-modifiers", "table-primary-key", "composite-keys"],
+  "namespaces": [{
+    "name": { "displayName": "Sales", "normalizedName": "Sales", "quoted": true },
+    "tables": [{
+      "name": { "displayName": "Order Items", "normalizedName": "Order Items", "quoted": true },
+      "span": { "anchor": "CREATE TABLE \"Sales\".\"Order Items\"", "startLine": 1 },
+      "columns": [
+        { "name": { "displayName": "Order ID", "normalizedName": "Order ID", "quoted": true }, "ordinal": 0, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": null, "span": { "anchor": "\"Order ID\" uuid", "startLine": 2 } },
+        { "name": { "displayName": "SKU", "normalizedName": "SKU", "quoted": true }, "ordinal": 1, "type": { "displayName": "character varying(32)", "normalizedName": "character varying", "modifiers": [{ "displayValue": "32", "normalizedValue": "32" }], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "\"SKU\" character varying(32)", "startLine": 3 } },
+        { "name": { "displayName": "camelCase", "normalizedName": "camelcase", "quoted": false }, "ordinal": 2, "type": { "displayName": "text", "normalizedName": "text", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": null, "span": { "anchor": "camelCase text", "startLine": 4 } },
+        { "name": { "displayName": "camelCase", "normalizedName": "camelCase", "quoted": true }, "ordinal": 3, "type": { "displayName": "text", "normalizedName": "text", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": null, "span": { "anchor": "\"camelCase\" text", "startLine": 5 } }
+      ],
+      "constraints": { "primaryKey": { "name": "Order Items PK", "columns": ["Order ID", "SKU"], "span": { "anchor": "CONSTRAINT \"Order Items PK\"", "startLine": 6 } }, "unique": [], "foreignKeys": [] }
+    }]
+  }],
+  "diagnostics": []
+}

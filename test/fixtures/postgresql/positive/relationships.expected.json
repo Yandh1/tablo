@@ -1,0 +1,68 @@
+{
+  "fixtureVersion": 1,
+  "outcome": "parse-success",
+  "features": ["create-table", "inline-primary-key", "table-primary-key", "unique-constraints", "inline-foreign-key", "table-foreign-key", "composite-keys", "self-references", "parallel-foreign-keys", "referential-actions", "multiple-statements"],
+  "namespaces": [{
+    "name": { "displayName": "public", "normalizedName": "public", "quoted": false },
+    "tables": [
+      {
+        "name": { "displayName": "tenants", "normalizedName": "tenants", "quoted": false },
+        "span": { "anchor": "CREATE TABLE tenants", "startLine": 1 },
+        "columns": [
+          { "name": { "displayName": "id", "normalizedName": "id", "quoted": false }, "ordinal": 0, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "id uuid PRIMARY KEY", "startLine": 2 } },
+          { "name": { "displayName": "region", "normalizedName": "region", "quoted": false }, "ordinal": 1, "type": { "displayName": "text", "normalizedName": "text", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "region text NOT NULL", "startLine": 3 } }
+        ],
+        "constraints": { "primaryKey": { "name": null, "columns": ["id"], "span": { "anchor": "PRIMARY KEY", "startLine": 2 } }, "unique": [{ "name": "tenants_region_id_key", "columns": ["region", "id"], "span": { "anchor": "CONSTRAINT tenants_region_id_key", "startLine": 4 } }], "foreignKeys": [] }
+      },
+      {
+        "name": { "displayName": "users", "normalizedName": "users", "quoted": false },
+        "span": { "anchor": "CREATE TABLE users", "startLine": 7 },
+        "columns": [
+          { "name": { "displayName": "tenant_id", "normalizedName": "tenant_id", "quoted": false }, "ordinal": 0, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "tenant_id uuid NOT NULL", "occurrence": 1, "startLine": 8 } },
+          { "name": { "displayName": "id", "normalizedName": "id", "quoted": false }, "ordinal": 1, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "id uuid NOT NULL", "occurrence": 2, "startLine": 9 } },
+          { "name": { "displayName": "manager_id", "normalizedName": "manager_id", "quoted": false }, "ordinal": 2, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": null, "span": { "anchor": "manager_id uuid", "startLine": 10 } },
+          { "name": { "displayName": "created_by_id", "normalizedName": "created_by_id", "quoted": false }, "ordinal": 3, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": null, "span": { "anchor": "created_by_id uuid", "startLine": 11 } },
+          { "name": { "displayName": "updated_by_id", "normalizedName": "updated_by_id", "quoted": false }, "ordinal": 4, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": null, "span": { "anchor": "updated_by_id uuid", "startLine": 12 } }
+        ],
+        "constraints": {
+          "primaryKey": { "name": "users_pkey", "columns": ["tenant_id", "id"], "span": { "anchor": "CONSTRAINT users_pkey", "startLine": 13 } },
+          "unique": [],
+          "foreignKeys": [
+            { "name": "users_tenant_fkey", "columns": ["tenant_id"], "referencedNamespace": "public", "referencedTable": "tenants", "referencedColumns": ["id"], "match": "simple", "onUpdate": "cascade", "onDelete": "restrict", "span": { "anchor": "CONSTRAINT users_tenant_fkey", "startLine": 14 } },
+            { "name": "users_manager_fkey", "columns": ["tenant_id", "manager_id"], "referencedNamespace": "public", "referencedTable": "users", "referencedColumns": ["tenant_id", "id"], "match": "simple", "onUpdate": "no-action", "onDelete": "set-null", "span": { "anchor": "CONSTRAINT users_manager_fkey", "startLine": 16 } },
+            { "name": "users_created_by_fkey", "columns": ["tenant_id", "created_by_id"], "referencedNamespace": "public", "referencedTable": "users", "referencedColumns": ["tenant_id", "id"], "match": "simple", "onUpdate": "no-action", "onDelete": "no-action", "span": { "anchor": "CONSTRAINT users_created_by_fkey", "startLine": 18 } },
+            { "name": "users_updated_by_fkey", "columns": ["tenant_id", "updated_by_id"], "referencedNamespace": "public", "referencedTable": "users", "referencedColumns": ["tenant_id", "id"], "match": "simple", "onUpdate": "restrict", "onDelete": "set-default", "span": { "anchor": "CONSTRAINT users_updated_by_fkey", "startLine": 20 } }
+          ]
+        }
+      },
+      {
+        "name": { "displayName": "sessions", "normalizedName": "sessions", "quoted": false },
+        "span": { "anchor": "CREATE TABLE sessions", "startLine": 24 },
+        "columns": [
+          { "name": { "displayName": "id", "normalizedName": "id", "quoted": false }, "ordinal": 0, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "id uuid PRIMARY KEY", "occurrence": 2, "startLine": 25 } },
+          { "name": { "displayName": "tenant_id", "normalizedName": "tenant_id", "quoted": false }, "ordinal": 1, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "tenant_id uuid NOT NULL", "occurrence": 2, "startLine": 26 } },
+          { "name": { "displayName": "user_id", "normalizedName": "user_id", "quoted": false }, "ordinal": 2, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "user_id uuid NOT NULL", "startLine": 27 } },
+          { "name": { "displayName": "tenant_region", "normalizedName": "tenant_region", "quoted": false }, "ordinal": 3, "type": { "displayName": "text", "normalizedName": "text", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": null, "span": { "anchor": "tenant_region text", "startLine": 28 } }
+        ],
+        "constraints": {
+          "primaryKey": { "name": null, "columns": ["id"], "span": { "anchor": "PRIMARY KEY", "occurrence": 3, "startLine": 25 } },
+          "unique": [],
+          "foreignKeys": [
+            { "name": null, "columns": ["tenant_id", "user_id"], "referencedNamespace": "public", "referencedTable": "users", "referencedColumns": ["tenant_id", "id"], "match": "simple", "onUpdate": "no-action", "onDelete": "cascade", "span": { "anchor": "FOREIGN KEY (tenant_id, user_id)", "startLine": 29 } },
+            { "name": null, "columns": ["tenant_region", "tenant_id"], "referencedNamespace": "public", "referencedTable": "tenants", "referencedColumns": ["region", "id"], "match": "simple", "onUpdate": "set-null", "onDelete": "set-null", "span": { "anchor": "FOREIGN KEY (tenant_region, tenant_id)", "startLine": 31 } }
+          ]
+        }
+      },
+      {
+        "name": { "displayName": "notes", "normalizedName": "notes", "quoted": false },
+        "span": { "anchor": "CREATE TABLE notes", "startLine": 35 },
+        "columns": [
+          { "name": { "displayName": "id", "normalizedName": "id", "quoted": false }, "ordinal": 0, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "id uuid PRIMARY KEY", "occurrence": 3, "startLine": 36 } },
+          { "name": { "displayName": "tenant_id", "normalizedName": "tenant_id", "quoted": false }, "ordinal": 1, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": null, "span": { "anchor": "tenant_id uuid REFERENCES", "startLine": 37 } }
+        ],
+        "constraints": { "primaryKey": { "name": null, "columns": ["id"], "span": { "anchor": "PRIMARY KEY", "occurrence": 4, "startLine": 36 } }, "unique": [], "foreignKeys": [{ "name": null, "columns": ["tenant_id"], "referencedNamespace": "public", "referencedTable": "tenants", "referencedColumns": ["id"], "match": "simple", "onUpdate": "no-action", "onDelete": "no-action", "span": { "anchor": "REFERENCES tenants (id)", "occurrence": 2, "startLine": 37 } }] }
+      }
+    ]
+  }],
+  "diagnostics": []
+}

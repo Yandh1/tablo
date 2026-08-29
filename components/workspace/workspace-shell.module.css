@@ -1,0 +1,100 @@
+.shell { min-height: 100dvh; background: var(--canvas); }
+.projectHeader {
+  position: fixed; inset: 0 0 auto; z-index: 20; display: flex; height: 48px;
+  align-items: center; justify-content: space-between; gap: 16px;
+  border-bottom: 1px solid var(--border); background: var(--surface); padding: 0 16px;
+}
+.projectIdentity, .projectMeta, .presetGroup, .tabs { display: flex; align-items: center; }
+.projectIdentity { min-width: 0; gap: 10px; }
+.productName { color: var(--text-secondary); font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
+.headerDivider { width: 1px; height: 18px; background: var(--border); }
+.projectName {
+  overflow: hidden; margin: 0; color: var(--text-primary); font-size: 14px;
+  font-weight: 600; letter-spacing: -.01em; text-overflow: ellipsis; white-space: nowrap;
+}
+.projectMeta { gap: 4px; }
+.formatLabel, .saveStatus, .ratioOutput { color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
+.formatLabel { margin-right: 8px; font-family: var(--font-geist-mono), monospace; }
+.saveStatus { margin-right: 4px; border-left: 1px solid var(--border); padding: 0 12px; }
+.headerButton, .quietButton, .presetButton, .tab, .exitButton {
+  border: 1px solid transparent; border-radius: 4px; background: transparent;
+  color: var(--text-secondary); cursor: pointer; font-size: 12px; font-weight: 500; white-space: nowrap;
+}
+.headerButton { height: 28px; padding: 0 9px; }
+.headerButton:hover, .quietButton:hover, .presetButton:hover, .tab:hover, .exitButton:hover {
+  background: var(--surface-secondary); color: var(--text-primary);
+}
+.headerButton:active, .quietButton:active, .presetButton:active, .tab:active, .exitButton:active { transform: translateY(1px); }
+.workspaceFrame {
+  display: grid; min-height: 100dvh; grid-template-rows: 40px minmax(0, 1fr); padding-top: 48px;
+}
+.workspaceControls {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border-bottom: 1px solid var(--border); background: var(--surface-secondary); padding: 0 12px;
+}
+.presetGroup, .tabs { gap: 2px; }
+.presetButton, .tab { height: 28px; padding: 0 9px; }
+.presetButton[aria-pressed="true"], .tab[aria-selected="true"] {
+  border-color: var(--border); background: var(--surface); color: var(--text-primary);
+}
+.ratioOutput {
+  margin-left: auto; font-family: var(--font-geist-mono), monospace; font-variant-numeric: tabular-nums;
+}
+.exitButton { height: 28px; margin-left: 4px; padding: 0 9px; }
+.exitButton kbd { margin-left: 5px; color: var(--text-muted); font-family: var(--font-geist-mono), monospace; font-size: 10px; }
+.panelGroup, .responsivePanels, .responsivePanel, .pane { min-height: 0; min-width: 0; }
+.panelGroup { height: 100%; background: var(--surface); }
+.panelGroup[data-full-workspace="editor"] .diagramPanel,
+.panelGroup[data-full-workspace="diagram"] .editorPanel,
+.panelGroup[data-full-workspace] .separator { display: none; }
+.panelGroup[data-full-workspace] { display: block !important; }
+.panelGroup[data-full-workspace="editor"] .editorPanel,
+.panelGroup[data-full-workspace="diagram"] .diagramPanel {
+  display: block !important;
+  flex: 0 0 100% !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+.pane { display: grid; height: 100%; grid-template-rows: 40px minmax(0, 1fr); background: var(--surface); }
+.paneToolbar {
+  display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px;
+  border-bottom: 1px solid var(--border); padding: 0 12px;
+}
+.paneTitle { margin: 0; color: var(--text-primary); font-size: 13px; font-weight: 600; }
+.quietButton { height: 28px; padding: 0 8px; }
+.placeholder {
+  display: grid; min-height: 0; place-items: center; overflow: auto; background-color: var(--surface);
+  background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-position: -1px -1px; background-size: 24px 24px;
+}
+.placeholderInner {
+  width: min(320px, calc(100% - 48px)); border: 1px solid var(--border); border-radius: 6px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent); padding: 20px;
+}
+.eyebrow {
+  margin: 0 0 8px; color: var(--accent); font-family: var(--font-geist-mono), monospace;
+  font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+}
+.placeholderTitle { margin: 0; color: var(--text-primary); font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.placeholderCopy { margin: 6px 0 0; color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
+.separator { position: relative; width: 5px; background: var(--surface-secondary); cursor: col-resize; touch-action: none; }
+.separator::before { position: absolute; inset: 0 2px; background: var(--border); content: ""; }
+.separator:hover::before, .separator[data-resize-handle-active]::before, .separator:focus-visible::before { background: var(--accent); }
+.separatorGrip {
+  position: absolute; top: 50%; left: 50%; width: 3px; height: 32px; border-radius: 4px;
+  background: var(--border-strong); transform: translate(-50%, -50%);
+}
+.responsivePanels, .responsivePanel { height: 100%; }
+.responsivePanel[hidden] { display: none; }
+
+@media (max-width: 767px) {
+  .projectHeader { padding: 0 10px; }
+  .productName, .headerDivider, .formatLabel, .saveStatus, .headerButton:first-of-type { display: none; }
+  .workspaceControls { padding: 0 8px; }
+  .paneToolbar { padding: 0 8px; }
+  .placeholderInner { width: calc(100% - 32px); padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .headerButton:active, .quietButton:active, .presetButton:active, .tab:active, .exitButton:active { transform: none; }
+}

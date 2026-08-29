@@ -1,0 +1,19 @@
+{
+  "fixtureVersion": 1,
+  "outcome": "parse-success-with-warnings",
+  "features": ["create-table", "inline-primary-key", "multiple-statements", "unsupported-statements"],
+  "namespaces": [{
+    "name": { "displayName": "public", "normalizedName": "public", "quoted": false },
+    "tables": [{
+      "name": { "displayName": "supported_table", "normalizedName": "supported_table", "quoted": false },
+      "span": { "anchor": "CREATE TABLE supported_table", "startLine": 1 },
+      "columns": [{ "name": { "displayName": "id", "normalizedName": "id", "quoted": false }, "ordinal": 0, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "id uuid PRIMARY KEY", "startLine": 2 } }],
+      "constraints": { "primaryKey": { "name": null, "columns": ["id"], "span": { "anchor": "PRIMARY KEY", "startLine": 2 } }, "unique": [], "foreignKeys": [] }
+    }]
+  }],
+  "diagnostics": [
+    { "code": "PGSD1101", "severity": "warning", "messageIntent": "CREATE INDEX is valid PostgreSQL but is outside the MVP structural subset and is preserved only in source.", "span": { "anchor": "CREATE INDEX", "startLine": 5 }, "why": "Indexes are not represented in SchemaIR v1.", "how": "Keep the statement in Manual SQL; Tablo will omit it from the diagram and canonical exports." },
+    { "code": "PGSD1101", "severity": "warning", "messageIntent": "CREATE VIEW is valid PostgreSQL but is outside the MVP structural subset and is preserved only in source.", "span": { "anchor": "CREATE VIEW", "startLine": 6 }, "why": "Views are not represented in SchemaIR v1.", "how": "Keep the statement in Manual SQL; Tablo will omit it from the diagram and canonical exports." },
+    { "code": "PGSD1101", "severity": "warning", "messageIntent": "GRANT is valid PostgreSQL but is outside the MVP structural subset and is preserved only in source.", "span": { "anchor": "GRANT SELECT", "startLine": 7 }, "why": "Privileges are not represented in SchemaIR v1.", "how": "Keep the statement in Manual SQL; Tablo will omit it from the diagram and canonical exports." }
+  ]
+}

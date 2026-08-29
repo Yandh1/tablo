@@ -1,0 +1,14 @@
+{
+  "fixtureVersion": 1,
+  "outcome": "syntax-error",
+  "features": ["malformed-supported-statement", "create-table"],
+  "namespaces": [],
+  "diagnostics": [{
+    "code": "PGSD1001",
+    "severity": "error",
+    "messageIntent": "Expected a comma between column definitions before total.",
+    "span": { "anchor": "total", "startLine": 4 },
+    "why": "Each CREATE TABLE item must be separated by a comma.",
+    "how": "Add a comma after customer_id uuid NOT NULL and remove the trailing comma before the closing parenthesis."
+  }]
+}

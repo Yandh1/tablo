@@ -1,0 +1,25 @@
+{
+  "fixtureVersion": 1,
+  "outcome": "semantic-error",
+  "features": ["create-table", "table-primary-key", "table-foreign-key", "composite-keys", "later-semantic-error"],
+  "namespaces": [],
+  "diagnostics": [
+    {
+      "code": "PGSD1203",
+      "severity": "error",
+      "messageIntent": "Foreign key column count does not match the referenced key column count.",
+      "span": { "anchor": "FOREIGN KEY (tenant_id, parent_id)", "startLine": 11 },
+      "why": "The local foreign key has two columns but the REFERENCES list has one.",
+      "how": "Reference two unique columns, such as REFERENCES parents (tenant_id, id), or remove one local column.",
+      "related": [{ "messageIntent": "The referenced composite primary key is declared here.", "span": { "anchor": "CONSTRAINT parents_pkey", "startLine": 4 } }]
+    },
+    {
+      "code": "PGSD1201",
+      "severity": "error",
+      "messageIntent": "Foreign key references the unknown table public.missing_parents.",
+      "span": { "anchor": "missing_parents", "startLine": 14 },
+      "why": "No table with the normalized name public.missing_parents exists in this source.",
+      "how": "Create missing_parents first or change the reference to an existing table."
+    }
+  ]
+}

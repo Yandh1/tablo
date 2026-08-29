@@ -7,6 +7,8 @@ describe("home page", () => {
   it("renders its primary heading", () => {
     render(<Home />);
 
-    expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Commerce schema" }),
+    ).toBeInTheDocument();
   });
 });

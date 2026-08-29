@@ -1,0 +1,57 @@
+{
+  "fixtureVersion": 1,
+  "outcome": "parse-success",
+  "features": [
+    "create-table", "unquoted-identifiers", "identifier-normalization",
+    "built-in-types", "type-modifiers", "arrays", "defaults",
+    "inline-primary-key", "table-primary-key", "unique-constraints",
+    "composite-keys", "comments", "multiple-statements"
+  ],
+  "namespaces": [
+    {
+      "name": { "displayName": "public", "normalizedName": "public", "quoted": false },
+      "tables": [
+        {
+          "name": { "displayName": "AccountProfiles", "normalizedName": "accountprofiles", "quoted": false },
+          "span": { "anchor": "CREATE TABLE AccountProfiles", "startLine": 3 },
+          "columns": [
+            { "name": { "displayName": "id", "normalizedName": "id", "quoted": false }, "ordinal": 0, "type": { "displayName": "bigint", "normalizedName": "bigint", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "id bigint PRIMARY KEY", "startLine": 4 } },
+            { "name": { "displayName": "account_id", "normalizedName": "account_id", "quoted": false }, "ordinal": 1, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "account_id uuid NOT NULL UNIQUE", "startLine": 5 } },
+            { "name": { "displayName": "display_name", "normalizedName": "display_name", "quoted": false }, "ordinal": 2, "type": { "displayName": "varchar(80)", "normalizedName": "character varying", "modifiers": [{ "displayValue": "80", "normalizedValue": "80" }], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": "'Anonymous'", "span": { "anchor": "display_name varchar(80)", "startLine": 6 } },
+            { "name": { "displayName": "balance", "normalizedName": "balance", "quoted": false }, "ordinal": 3, "type": { "displayName": "numeric(12, 2)", "normalizedName": "numeric", "modifiers": [{ "displayValue": "12", "normalizedValue": "12" }, { "displayValue": "2", "normalizedValue": "2" }], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": "0.00", "span": { "anchor": "balance numeric(12, 2)", "startLine": 7 } },
+            { "name": { "displayName": "tags", "normalizedName": "tags", "quoted": false }, "ordinal": 4, "type": { "displayName": "text[]", "normalizedName": "text", "modifiers": [], "arrayDimensions": 1 }, "nullable": true, "defaultExpression": "ARRAY[]::text[]", "span": { "anchor": "tags text[]", "startLine": 8 } },
+            { "name": { "displayName": "flags", "normalizedName": "flags", "quoted": false }, "ordinal": 5, "type": { "displayName": "boolean[]", "normalizedName": "boolean", "modifiers": [], "arrayDimensions": 1 }, "nullable": false, "defaultExpression": "ARRAY[true]", "span": { "anchor": "flags boolean[]", "startLine": 9 } },
+            { "name": { "displayName": "preferences", "normalizedName": "preferences", "quoted": false }, "ordinal": 6, "type": { "displayName": "jsonb", "normalizedName": "jsonb", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": "'{}'::jsonb", "span": { "anchor": "preferences jsonb", "startLine": 10 } },
+            { "name": { "displayName": "avatar", "normalizedName": "avatar", "quoted": false }, "ordinal": 7, "type": { "displayName": "bytea", "normalizedName": "bytea", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": null, "span": { "anchor": "avatar bytea", "startLine": 11 } },
+            { "name": { "displayName": "birthday", "normalizedName": "birthday", "quoted": false }, "ordinal": 8, "type": { "displayName": "date", "normalizedName": "date", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": null, "span": { "anchor": "birthday date", "startLine": 12 } },
+            { "name": { "displayName": "last_seen", "normalizedName": "last_seen", "quoted": false }, "ordinal": 9, "type": { "displayName": "timestamp(3) with time zone", "normalizedName": "timestamp with time zone", "modifiers": [{ "displayValue": "3", "normalizedValue": "3" }], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": "CURRENT_TIMESTAMP", "span": { "anchor": "last_seen timestamp(3) with time zone", "startLine": 13 } }
+          ],
+          "constraints": {
+            "primaryKey": { "name": null, "columns": ["id"], "span": { "anchor": "PRIMARY KEY", "startLine": 4 } },
+            "unique": [
+              { "name": null, "columns": ["account_id"], "span": { "anchor": "UNIQUE", "occurrence": 1, "startLine": 5 } },
+              { "name": "account_profiles_display_name_key", "columns": ["display_name"], "span": { "anchor": "CONSTRAINT account_profiles_display_name_key", "startLine": 14 } }
+            ],
+            "foreignKeys": []
+          }
+        },
+        {
+          "name": { "displayName": "audit_log", "normalizedName": "audit_log", "quoted": false },
+          "span": { "anchor": "CREATE TABLE audit_log", "startLine": 17 },
+          "columns": [
+            { "name": { "displayName": "tenant_id", "normalizedName": "tenant_id", "quoted": false }, "ordinal": 0, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "tenant_id uuid", "startLine": 18 } },
+            { "name": { "displayName": "sequence_no", "normalizedName": "sequence_no", "quoted": false }, "ordinal": 1, "type": { "displayName": "integer", "normalizedName": "integer", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "sequence_no integer", "startLine": 19 } },
+            { "name": { "displayName": "payload", "normalizedName": "payload", "quoted": false }, "ordinal": 2, "type": { "displayName": "jsonb", "normalizedName": "jsonb", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "payload jsonb", "startLine": 20 } },
+            { "name": { "displayName": "created_at", "normalizedName": "created_at", "quoted": false }, "ordinal": 3, "type": { "displayName": "timestamp without time zone", "normalizedName": "timestamp without time zone", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": "now()", "span": { "anchor": "created_at timestamp", "startLine": 21 } }
+          ],
+          "constraints": {
+            "primaryKey": { "name": "audit_log_pkey", "columns": ["tenant_id", "sequence_no"], "span": { "anchor": "CONSTRAINT audit_log_pkey", "startLine": 22 } },
+            "unique": [],
+            "foreignKeys": []
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostics": []
+}

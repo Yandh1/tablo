@@ -1,0 +1,33 @@
+{
+  "fixtureVersion": 1,
+  "outcome": "parse-success",
+  "features": ["create-table", "alter-table-add-constraint", "table-primary-key", "unique-constraints", "table-foreign-key", "composite-keys", "referential-actions", "multiple-statements"],
+  "namespaces": [{
+    "name": { "displayName": "public", "normalizedName": "public", "quoted": false },
+    "tables": [
+      {
+        "name": { "displayName": "teams", "normalizedName": "teams", "quoted": false },
+        "span": { "anchor": "CREATE TABLE teams", "startLine": 1 },
+        "columns": [
+          { "name": { "displayName": "id", "normalizedName": "id", "quoted": false }, "ordinal": 0, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": true, "defaultExpression": null, "span": { "anchor": "id uuid", "startLine": 2 } },
+          { "name": { "displayName": "slug", "normalizedName": "slug", "quoted": false }, "ordinal": 1, "type": { "displayName": "text", "normalizedName": "text", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "slug text NOT NULL", "startLine": 3 } }
+        ],
+        "constraints": { "primaryKey": { "name": "teams_pkey", "columns": ["id"], "span": { "anchor": "ADD CONSTRAINT teams_pkey", "startLine": 12 } }, "unique": [{ "name": "teams_slug_key", "columns": ["slug"], "span": { "anchor": "ADD CONSTRAINT teams_slug_key", "startLine": 14 } }], "foreignKeys": [] }
+      },
+      {
+        "name": { "displayName": "memberships", "normalizedName": "memberships", "quoted": false },
+        "span": { "anchor": "CREATE TABLE memberships", "startLine": 6 },
+        "columns": [
+          { "name": { "displayName": "team_id", "normalizedName": "team_id", "quoted": false }, "ordinal": 0, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "team_id uuid NOT NULL", "startLine": 7 } },
+          { "name": { "displayName": "member_id", "normalizedName": "member_id", "quoted": false }, "ordinal": 1, "type": { "displayName": "uuid", "normalizedName": "uuid", "modifiers": [], "arrayDimensions": 0 }, "nullable": false, "defaultExpression": null, "span": { "anchor": "member_id uuid NOT NULL", "startLine": 8 } }
+        ],
+        "constraints": {
+          "primaryKey": { "name": "memberships_pkey", "columns": ["team_id", "member_id"], "span": { "anchor": "ADD CONSTRAINT memberships_pkey", "startLine": 16 } },
+          "unique": [],
+          "foreignKeys": [{ "name": "memberships_team_fkey", "columns": ["team_id"], "referencedNamespace": "public", "referencedTable": "teams", "referencedColumns": ["id"], "match": "simple", "onUpdate": "no-action", "onDelete": "cascade", "span": { "anchor": "ADD CONSTRAINT memberships_team_fkey", "startLine": 18 } }]
+        }
+      }
+    ]
+  }],
+  "diagnostics": []
+}
