@@ -89,6 +89,14 @@ job.
 ```bash
 pnpm lint
 pnpm typecheck
+pnpm test:unit
+pnpm test:component
 pnpm test
+pnpm test:e2e
 pnpm build
 ```
+
+`pnpm test` runs the Node unit suite and the jsdom component suite. The E2E
+gate builds the production application, starts it locally on port 3000, and
+runs the Chromium smoke test. Install that browser once per development
+machine or CI image with `pnpm exec playwright install chromium`.
