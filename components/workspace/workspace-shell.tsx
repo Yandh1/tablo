@@ -10,6 +10,7 @@ import {
 } from "react-resizable-panels";
 import { useCallback, useEffect, useRef, useState, type Ref } from "react";
 
+import { GuidedEditor } from "./guided-editor";
 import styles from "./workspace-shell.module.css";
 
 const DEFAULT_EDITOR_RATIO = 50;
@@ -54,17 +55,19 @@ function useDesktopWorkspace() {
 function PlaceholderPane({ pane }: { pane: Pane }) {
   const isEditor = pane === "editor";
 
+  if (isEditor) {
+    return <GuidedEditor />;
+  }
+
   return (
     <div className={styles.placeholder}>
       <div className={styles.placeholderInner}>
-        <p className={styles.eyebrow}>{isEditor ? "Source" : "Canvas"}</p>
+        <p className={styles.eyebrow}>Canvas</p>
         <h3 className={styles.placeholderTitle}>
-          {isEditor ? "Schema editor" : "Relational diagram"}
+          Relational diagram
         </h3>
         <p className={styles.placeholderCopy}>
-          {isEditor
-            ? "The Monaco editor will load here in the next workspace slice."
-            : "The React Flow diagram will load here in the next workspace slice."}
+          The React Flow diagram will load here in the next workspace slice.
         </p>
       </div>
     </div>
