@@ -1,6 +1,6 @@
 .shell { min-height: 100dvh; background: var(--canvas); }
 .projectHeader {
-  position: fixed; inset: 0 0 auto; z-index: 20; display: flex; height: 48px;
+  position: fixed; inset: 0 0 auto; z-index: 20; display: flex; height: 44px;
   align-items: center; justify-content: space-between; gap: 16px;
   border-bottom: 1px solid var(--border); background: var(--surface); padding: 0 16px;
 }
@@ -12,10 +12,13 @@
   overflow: hidden; margin: 0; color: var(--text-primary); font-size: 14px;
   font-weight: 600; letter-spacing: -.01em; text-overflow: ellipsis; white-space: nowrap;
 }
-.projectMeta { gap: 4px; }
-.formatLabel, .saveStatus, .ratioOutput { color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
-.formatLabel { margin-right: 8px; font-family: var(--font-geist-mono), monospace; }
-.saveStatus { margin-right: 4px; border-left: 1px solid var(--border); padding: 0 12px; }
+.ratioOutput { color: var(--text-secondary); font-size: 11px; white-space: nowrap; }
+.parseStatus { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: 11px; font-weight: 600; }
+.statusDot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.parseStatus[data-status="invalid"] .statusDot { background: #d92d20; }
+.parseStatus[data-status="draft-incomplete"] .statusDot { background: #b58105; }
+.parseStatus[data-status="valid"] .statusDot { background: #16803c; }
+.staleLabel { border-left: 1px solid var(--border); color: #9a6700; padding-left: 8px; }
 .headerButton, .quietButton, .presetButton, .tab, .exitButton {
   border: 1px solid transparent; border-radius: 4px; background: transparent;
   color: var(--text-secondary); cursor: pointer; font-size: 12px; font-weight: 500; white-space: nowrap;
@@ -26,20 +29,18 @@
 }
 .headerButton:active, .quietButton:active, .presetButton:active, .tab:active, .exitButton:active { transform: translateY(1px); }
 .workspaceFrame {
-  display: grid; min-height: 100dvh; grid-template-rows: 40px minmax(0, 1fr); padding-top: 48px;
+  display: grid; min-height: 100dvh; grid-template-rows: 32px minmax(0, 1fr); padding-top: 44px;
 }
 .workspaceControls {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  border-bottom: 1px solid var(--border); background: var(--surface-secondary); padding: 0 12px;
+  border-bottom: 1px solid var(--border); background: var(--surface-secondary); padding: 0 10px;
 }
 .presetGroup, .tabs { gap: 2px; }
 .presetButton, .tab { height: 28px; padding: 0 9px; }
 .presetButton[aria-pressed="true"], .tab[aria-selected="true"] {
   border-color: var(--border); background: var(--surface); color: var(--text-primary);
 }
-.ratioOutput {
-  margin-left: auto; font-family: var(--font-geist-mono), monospace; font-variant-numeric: tabular-nums;
-}
+.ratioOutput { font-family: var(--font-geist-mono), monospace; font-variant-numeric: tabular-nums; }
 .exitButton { height: 28px; margin-left: 4px; padding: 0 9px; }
 .exitButton kbd { margin-left: 5px; color: var(--text-muted); font-family: var(--font-geist-mono), monospace; font-size: 10px; }
 .panelGroup, .responsivePanels, .responsivePanel, .pane { min-height: 0; min-width: 0; }
@@ -55,7 +56,7 @@
   height: 100% !important;
   width: 100% !important;
 }
-.pane { display: grid; height: 100%; grid-template-rows: 40px minmax(0, 1fr); background: var(--surface); }
+.pane { display: grid; height: 100%; grid-template-rows: 36px minmax(0, 1fr); background: var(--surface); }
 .paneToolbar {
   display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px;
   border-bottom: 1px solid var(--border); padding: 0 12px;

@@ -1,11 +1,11 @@
-.editor { min-height: 0; height: 100%; overflow: auto; background: var(--surface); }
+.editor { display: flex; min-height: 0; height: 100%; overflow: auto; flex-direction: column; background: var(--surface); }
 .modeBar { position: sticky; top: 0; z-index: 3; display: flex; min-height: 40px; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); background: var(--surface); padding: 5px 12px; }
 .modeChoice { display: flex; gap: 2px; }
-.modeButton, .manualPlaceholder button, .addTableButton, .addColumnButton, .deleteTableButton, .reorderActions button { border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 12px; font-weight: 550; }
+.modeButton, .manualPlaceholder button, .addTableButton, .addColumnButton, .deleteTableButton { border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 12px; font-weight: 550; }
 .modeButton { min-height: 28px; padding: 0 9px; }
 .modeButton[aria-checked="true"] { border-color: var(--border); background: var(--surface-secondary); color: var(--text-primary); }
 .modeHelp { color: var(--text-muted); font-size: 11px; }
-.guidedLayout { display: grid; min-height: calc(100% - 40px); grid-template-columns: minmax(0, 1fr); align-content: start; }
+.guidedLayout { display: grid; min-height: 0; flex: 1 1 auto; overflow: auto; grid-template-columns: minmax(0, 1fr); align-content: start; }
 .tableList { min-width: 0; padding: 12px 12px 4px; }
 .tableSequence { min-width: 0; }
 .tableBlock { min-width: 0; margin: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); padding: 0; }
@@ -19,20 +19,15 @@
 .editor input::placeholder { color: var(--text-muted); opacity: 1; }
 .protectedLabel { color: var(--text-muted); font-size: 11px; white-space: nowrap; }
 .deleteTableButton { min-height: 28px; padding: 0 8px; }
-.deleteTableButton:hover, .reorderActions button:last-child:hover { color: #b42318; }
-.columnHeader, .columnRow { display: grid; grid-template-columns: minmax(96px, 1.1fr) minmax(90px, 1fr) 64px minmax(92px, 1fr) 74px minmax(130px, 1.25fr) minmax(190px, 1.5fr); gap: 6px; }
+.deleteTableButton:hover { color: #b42318; }
+.columnHeader, .columnRow { display: grid; grid-template-columns: minmax(110px, 1.2fr) minmax(100px, 1fr) 78px 92px 66px minmax(150px, 1.25fr); gap: 6px; }
 .columnHeader { padding: 6px 10px; color: var(--text-muted); font-size: 10px; font-weight: 600; letter-spacing: .02em; }
 .columns { border-top: 1px solid var(--border); }
 .columnRow { align-items: start; border-bottom: 1px solid var(--border); padding: 7px 10px; }
 .columnRow:last-child { border-bottom: 0; }
-.compactField, .keyFields label { display: flex; min-height: 28px; align-items: center; gap: 4px; color: var(--text-secondary); font-size: 10px; }
+.compactField { display: flex; min-height: 28px; align-items: center; gap: 4px; color: var(--text-secondary); font-size: 10px; }
 .compactField { flex-direction: row-reverse; justify-content: flex-end; }
 .editor input[type="checkbox"] { width: 14px; height: 14px; margin: 0; accent-color: var(--accent); }
-.keyFields { display: flex; gap: 6px; }
-.rowActions { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-.reorderActions { display: flex; grid-column: 1 / -1; gap: 2px; }
-.reorderActions button { min-height: 24px; border-color: var(--border); padding: 0 6px; font-size: 10px; }
-.reorderActions button:disabled { cursor: not-allowed; opacity: .4; }
 .emptyColumns { margin: 0; padding: 18px 10px; color: var(--text-muted); font-size: 12px; }
 .tableFooter { display: flex; min-height: 38px; align-items: center; justify-content: space-between; padding: 4px 10px; }
 .addColumnButton { min-height: 28px; border-color: var(--border); padding: 0 9px; color: var(--text-primary); }
@@ -41,26 +36,15 @@
 .addTableRail { position: relative; }
 .addTableButton { position: relative; z-index: 1; min-height: 28px; border-color: var(--border); background: var(--surface); padding: 0 10px; opacity: 0; }
 .tableSequence:hover .addTableButton, .tableSequence:focus-within .addTableButton, .addTableButton:focus-visible { opacity: 1; }
-.modeButton:hover, .manualPlaceholder button:hover, .addTableButton:hover, .addColumnButton:hover, .deleteTableButton:hover, .reorderActions button:hover { background: var(--surface-secondary); color: var(--text-primary); }
-.modeButton:active, .manualPlaceholder button:active, .addTableButton:active, .addColumnButton:active, .deleteTableButton:active, .reorderActions button:active { transform: translateY(1px); }
-.preview { margin: 0 12px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-secondary); }
-.previewHeader { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 10px; }
-.previewHeader h3 { margin: 0; font-size: 12px; }
-.previewHeader p { margin: 2px 0 0; color: var(--text-muted); font-size: 10px; }
-.previewState { color: var(--text-secondary); font-size: 10px; font-weight: 600; }
-.sqlPreview { display: block; width: 100%; min-height: 160px; resize: vertical; border: 0; border-top: 1px solid var(--border); border-radius: 0 0 6px 6px; background: var(--surface); color: var(--text-primary); font-family: var(--font-geist-mono), monospace; font-size: 11px; line-height: 1.55; padding: 10px; }
-.issues { border-top: 1px solid var(--border); padding: 10px; color: var(--text-secondary); font-size: 11px; }
-.issues p { margin: 0 0 6px; }
-.issues ul { margin: 0; padding-left: 18px; }
-.issues li + li { margin-top: 3px; }
-.issues code { color: var(--text-primary); font-size: 10px; }
+.modeButton:hover, .manualPlaceholder button:hover, .addTableButton:hover, .addColumnButton:hover, .deleteTableButton:hover { background: var(--surface-secondary); color: var(--text-primary); }
+.modeButton:active, .manualPlaceholder button:active, .addTableButton:active, .addColumnButton:active, .deleteTableButton:active { transform: translateY(1px); }
 .manualPlaceholder { max-width: 440px; margin: 48px auto; padding: 20px; }
 .manualPlaceholder h3 { margin: 0; font-size: 14px; }
 .manualPlaceholder p { color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
 .manualPlaceholder button { min-height: 28px; border-color: var(--border); padding: 0 9px; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
-@media (pointer: coarse) { .addTableButton { min-height: 44px; opacity: 1; } .addColumnButton, .deleteTableButton, .reorderActions button, .modeButton { min-height: 44px; } }
-@media (max-width: 1279px) { .columnHeader { display: none; } .columnRow { grid-template-columns: minmax(96px, 1fr) minmax(90px, 1fr) 64px; } .rowActions { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; } }
-@media (max-width: 767px) { .modeBar { align-items: flex-start; flex-direction: column; padding: 6px 8px; } .modeHelp { padding-left: 2px; } .tableList { padding: 8px 8px 4px; } .tableHeader { align-items: flex-start; flex-direction: column; } .columnRow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .rowActions { grid-column: 1 / -1; } .preview { margin: 0 8px 8px; } .protectedLabel { white-space: normal; } }
-@media (prefers-reduced-motion: reduce) { .modeButton:active, .manualPlaceholder button:active, .addTableButton:active, .addColumnButton:active, .deleteTableButton:active, .reorderActions button:active { transform: none; } }
+@media (pointer: coarse) { .addTableButton { min-height: 44px; opacity: 1; } .addColumnButton, .deleteTableButton, .modeButton { min-height: 44px; } }
+@media (max-width: 1279px) { .columnHeader { display: none; } .columnRow { grid-template-columns: minmax(110px, 1fr) minmax(100px, 1fr) repeat(3, minmax(70px, auto)); } .columnRow > :last-child { grid-column: 1 / -1; } }
+@media (max-width: 767px) { .modeBar { align-items: flex-start; flex-direction: column; padding: 6px 8px; } .modeHelp { padding-left: 2px; } .tableList { padding: 8px 8px 4px; } .tableHeader { align-items: flex-start; flex-direction: column; } .columnRow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .columnRow > :last-child { grid-column: 1 / -1; } .protectedLabel { white-space: normal; } }
+@media (prefers-reduced-motion: reduce) { .modeButton:active, .manualPlaceholder button:active, .addTableButton:active, .addColumnButton:active, .deleteTableButton:active { transform: none; } }

@@ -52,7 +52,7 @@ test("fills the desktop workspace and restores focus after full-workspace mode",
   await page.goto("/");
 
   const fullWorkspace = page.getByRole("button", {
-    name: "Use full workspace for editor",
+    name: "Expand editor pane",
   });
   await fullWorkspace.click();
 
@@ -65,4 +65,46 @@ test("fills the desktop workspace and restores focus after full-workspace mode",
   await expect(fullWorkspace).toBeFocused();
   const restoredEditorBox = await editor.boundingBox();
   expect(restoredEditorBox?.width).toBeLessThan(700);
+});
+
+test("loads Monaco and renders parsed table nodes with a fit control", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+
+  await page.getByRole("radio", { name: "Manual SQL" }).click();
+  await expect(page.locator(".monaco-editor")).toBeVisible();
+  await expect(page.getByText("Valid", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("schema-diagram").getByText("users", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("schema-diagram").getByText("orders", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Fit diagram" }).click();
+});
+
+test("parses GuidedDraft SQL through the workspace parser", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+
+  await page.getByRole("textbox", { name: "Table 1 name" }).fill("users");
+  await page.getByRole("button", { name: "Add column" }).click();
+  await page.getByRole("textbox", { name: "Column 1 name" }).fill("id");
+  await page.getByRole("textbox", { name: "Column 1 type" }).fill("uuid");
+  await page.getByLabel("Primary key").check();
+
+  await expect(page.getByText("Valid", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("schema-diagram").getByText("users", { exact: true })).toBeVisible();
+});
+
+test("keeps the last valid diagram visible when Manual SQL becomes invalid", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+
+  await page.getByRole("radio", { name: "Manual SQL" }).click();
+  await expect(page.getByText("Valid", { exact: true })).toBeVisible();
+  await page.locator(".monaco-editor").click();
+  await page.keyboard.press("ControlOrMeta+A");
+  await page.keyboard.type("CREATE TABLE users (id uuid,,);");
+
+  await expect(page.getByRole("status").filter({ hasText: "Invalid" })).toBeVisible();
+  await expect(page.getByText("Showing last valid diagram", { exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Problems" })).toContainText("PGSD1001");
+  await expect(page.getByTestId("schema-diagram").getByText("orders", { exact: true })).toBeVisible();
 });

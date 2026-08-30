@@ -40,20 +40,12 @@ describe("workspace shell", () => {
     });
   });
 
-  it("starts balanced and applies all bounded presets", async () => {
-    const user = userEvent.setup();
+  it("starts balanced and exposes expansion controls for both panes", () => {
     render(<WorkspaceShell projectName="Commerce schema" />);
 
     expect(screen.getByText("Split 50 / 50")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Editor focus" }));
-    expect(screen.getByText("Split 75 / 25")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Diagram focus" }));
-    expect(screen.getByText("Split 25 / 75")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Balanced" }));
-    expect(screen.getByText("Split 50 / 50")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Expand editor pane" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Expand diagram pane" })).toBeVisible();
   });
 
   it("exposes the accessible keyboard splitter", () => {
@@ -72,16 +64,26 @@ describe("workspace shell", () => {
     const user = userEvent.setup();
     render(<WorkspaceShell projectName="Commerce schema" />);
 
-    await user.click(screen.getByRole("button", { name: "Editor focus" }));
     const fullButton = screen.getByRole("button", {
-      name: "Use full workspace for editor",
+      name: "Expand editor pane",
     });
     await user.click(fullButton);
 
     expect(screen.getByRole("button", { name: /Restore split/ })).toBeInTheDocument();
     await user.keyboard("{Escape}");
     await vi.waitFor(() => expect(fullButton).toHaveFocus());
-    expect(screen.getByText("Split 75 / 25")).toBeInTheDocument();
+    expect(screen.getByText("Split 50 / 50")).toBeInTheDocument();
+  });
+
+  it("switches between Guided and Manual authoring while keeping Problems reachable", async () => {
+    const user = userEvent.setup();
+    render(<WorkspaceShell projectName="Commerce schema" />);
+
+    expect(screen.getByRole("radio", { name: "Guided blocks" })).toHaveAttribute("aria-checked", "true");
+    await user.click(screen.getByRole("radio", { name: "Manual SQL" }));
+    expect(screen.getByRole("radio", { name: "Manual SQL" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("region", { name: "Problems" })).toBeVisible();
+    expect(screen.getByLabelText("Manual SQL editor")).toBeVisible();
   });
 
   it("shows persistent Editor and Diagram tabs below desktop width", async () => {

@@ -1,0 +1,13 @@
+.panel { flex: 0 0 auto; max-height: 190px; overflow: auto; border-top: 1px solid var(--border); background: var(--surface); }
+.header { position: sticky; top: 0; z-index: 1; display: flex; min-height: 34px; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); background: var(--surface-secondary); padding: 0 10px; }
+.header h3 { margin: 0; font-size: 11px; font-weight: 650; }
+.header span, .empty { color: var(--text-muted); font-size: 10px; }
+.empty { margin: 0; padding: 10px; }
+.list { margin: 0; padding: 0; list-style: none; }
+.item { display: grid; grid-template-columns: 52px 68px minmax(0, 1fr) auto; gap: 8px; align-items: start; padding: 7px 10px; border-bottom: 1px solid var(--border); font-size: 11px; line-height: 1.35; }
+.severity { color: var(--text-secondary); font-size: 9px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
+.severity[data-severity="error"] { color: #b42318; }
+.severity[data-severity="warning"] { color: #9a6700; }
+.item code, .location { color: var(--text-muted); font-family: var(--font-geist-mono), monospace; font-size: 10px; }
+.message { min-width: 0; color: var(--text-primary); }
+.location { white-space: nowrap; }

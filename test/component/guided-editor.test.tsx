@@ -1,8 +1,12 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { GuidedEditor } from "../../components/workspace/guided-editor";
+import {
+  serializeGuidedDraftToPostgresSql,
+  type GuidedDraftV1,
+} from "../../domain/guided-draft";
 
 describe("guided editor", () => {
   it("starts with one protected structural table shell", () => {
@@ -39,108 +43,59 @@ describe("guided editor", () => {
     expect(replacementId).not.toBe(tableIdsAfterAdd[1]);
   });
 
-  it("keeps column IDs stable while keyboard reordering", async () => {
-    const user = userEvent.setup();
-    const { container } = render(<GuidedEditor />);
-    const addColumn = screen.getByRole("button", { name: /Add column/ });
-    await user.click(addColumn);
-    await user.click(addColumn);
-
-    const names = screen.getAllByRole("textbox", { name: /Column \d name/ });
-    await user.type(names[0]!, "first");
-    await user.type(names[1]!, "second");
-    const rowsBefore = Array.from(
-      container.querySelectorAll<HTMLElement>("[data-guided-draft-id^='guided-draft:v1:column']"),
-    );
-    const secondId = rowsBefore[1]!.dataset.guidedDraftId;
-
-    names[1]!.focus();
-    await user.keyboard("{Alt>}{ArrowUp}{/Alt}");
-
-    const rowsAfter = Array.from(
-      container.querySelectorAll<HTMLElement>("[data-guided-draft-id^='guided-draft:v1:column']"),
-    );
-    expect(rowsAfter[0]!.dataset.guidedDraftId).toBe(secondId);
-    expect(within(rowsAfter[0]!).getByDisplayValue("second")).toBeInTheDocument();
-  });
-
-  it("does not reuse a column draft ID after deletion", async () => {
-    const user = userEvent.setup();
-    const { container } = render(<GuidedEditor />);
-    const addColumn = screen.getByRole("button", { name: /Add column/ });
-
-    await user.click(addColumn);
-    const firstColumnId = container.querySelector<HTMLElement>(
-      "[data-guided-draft-id^='guided-draft:v1:column']",
-    )!.dataset.guidedDraftId;
-    await user.click(screen.getByRole("button", { name: "Delete column 1" }));
-    await user.click(addColumn);
-
-    const replacementColumnId = container.querySelector<HTMLElement>(
-      "[data-guided-draft-id^='guided-draft:v1:column']",
-    )!.dataset.guidedDraftId;
-    expect(replacementColumnId).not.toBe(firstColumnId);
-  });
-
-  it("generates a read-only non-exportable SQL preview for a complete draft", async () => {
+  it("exposes only the MVP column fields and actions", async () => {
     const user = userEvent.setup();
     render(<GuidedEditor />);
+    await user.click(screen.getByRole("button", { name: /Add column/ }));
+
+    expect(screen.getByRole("textbox", { name: "Column 1 name" })).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "Column 1 type" })).toBeVisible();
+    expect(screen.getByLabelText("Primary key")).toBeVisible();
+    expect(screen.getByLabelText("Not null")).toBeVisible();
+    expect(screen.getByLabelText("Unique")).toBeVisible();
+    expect(screen.getByRole("combobox", { name: "Column 1 reference target" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: /Move column/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Delete column/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: /default expression/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: /on delete|on update/i })).not.toBeInTheDocument();
+    expect(screen.queryByText("Generated SQL")).not.toBeInTheDocument();
+  });
+
+  it("serializes the MVP fields and a single-column reference", async () => {
+    const user = userEvent.setup();
+    const onDraftChange = vi.fn<(draft: GuidedDraftV1) => void>();
+    const { container } = render(<GuidedEditor onDraftChange={onDraftChange} />);
 
     await user.type(screen.getByRole("textbox", { name: "Table 1 name" }), "users");
     await user.click(screen.getByRole("button", { name: /Add column/ }));
     await user.type(screen.getByRole("textbox", { name: "Column 1 name" }), "id");
     await user.type(screen.getByRole("textbox", { name: "Column 1 type" }), "uuid");
-    await user.click(screen.getByLabelText("PK"));
+    await user.click(screen.getByLabelText("Primary key"));
 
-    const preview = screen.getByRole("textbox", {
-      name: "Generated PostgreSQL SQL preview",
-    });
-    expect(preview).toHaveAttribute("readonly");
-    expect(preview).toHaveValue(
-      "CREATE TABLE public.users (\n  id uuid PRIMARY KEY\n);\n",
+    await user.click(screen.getByRole("button", { name: /Add table/ }));
+    await user.type(screen.getByRole("textbox", { name: "Table 2 name" }), "posts");
+    await user.click(screen.getAllByRole("button", { name: /Add column/ })[1]!);
+
+    const tables = container.querySelectorAll<HTMLElement>(
+      "[data-guided-draft-id^='guided-draft:v1:table']",
     );
-    expect(screen.getByText("Read-only preview. Canonical validation is still required.")).toBeVisible();
-  });
-
-  it("edits nullability, defaults, uniqueness, references, and actions", async () => {
-    const user = userEvent.setup();
-    render(<GuidedEditor />);
-
-    await user.type(screen.getByRole("textbox", { name: "Table 1 name" }), "users");
-    const addColumn = screen.getByRole("button", { name: /Add column/ });
-    await user.click(addColumn);
-    await user.click(addColumn);
-
-    const columnNames = screen.getAllByRole("textbox", { name: /Column \d name/ });
-    const columnTypes = screen.getAllByRole("textbox", { name: /Column \d type/ });
-    await user.type(columnNames[0]!, "id");
-    await user.type(columnTypes[0]!, "uuid");
-    await user.click(screen.getAllByLabelText("PK")[0]!);
-    await user.type(columnNames[1]!, "parent_id");
-    await user.type(columnTypes[1]!, "uuid");
-    await user.click(screen.getAllByLabelText("Nullable")[1]!);
-    await user.type(
-      screen.getByRole("textbox", { name: "Column 2 default expression" }),
-      "gen_random_uuid()",
-    );
-    await user.click(screen.getAllByLabelText("UQ")[1]!);
+    const posts = within(tables[1]!);
+    await user.type(posts.getByRole("textbox", { name: "Column 1 name" }), "user_id");
+    await user.type(posts.getByRole("textbox", { name: "Column 1 type" }), "uuid");
+    await user.click(posts.getByLabelText("Not null"));
+    await user.click(posts.getByLabelText("Unique"));
     await user.selectOptions(
-      screen.getByRole("combobox", { name: "Column 2 reference target" }),
-      screen.getByRole("option", { name: "users.id" }),
-    );
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: "Column 2 on delete" }),
-      "cascade",
-    );
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: "Column 2 on update" }),
-      "restrict",
+      posts.getByRole("combobox", { name: "Column 1 reference target" }),
+      posts.getByRole("option", { name: "users.id" }),
     );
 
-    expect(screen.getByRole<HTMLTextAreaElement>("textbox", {
-      name: "Generated PostgreSQL SQL preview",
-    }).value).toContain(
-      "parent_id uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE REFERENCES public.users (id) ON DELETE CASCADE ON UPDATE RESTRICT",
+    const draft = onDraftChange.mock.calls.at(-1)![0];
+    const result = serializeGuidedDraftToPostgresSql(draft);
+    expect(result.status).toBe("generated");
+    if (result.status !== "generated") throw new Error("Expected generated SQL");
+    expect(result.output.source).toBe(
+      "CREATE TABLE public.users (\n  id uuid PRIMARY KEY\n);\n\n" +
+      "CREATE TABLE public.posts (\n  user_id uuid NOT NULL UNIQUE REFERENCES public.users (id)\n);\n",
     );
   });
 

@@ -4,29 +4,25 @@ import {
   createGuidedColumnDraft,
   createGuidedDraft,
   createGuidedTableDraft,
-  serializeGuidedDraftToPostgresSql,
   type GuidedColumnDraft,
   type GuidedDraftV1,
   type GuidedReferenceDraft,
   type GuidedTableDraft,
 } from "@/domain/guided-draft";
-import type { ReferentialAction } from "@/domain/schema-ir";
-import { useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 import styles from "./guided-editor.module.css";
 
-const REFERENTIAL_ACTIONS: Array<{
-  value: ReferentialAction;
-  label: string;
-}> = [
-  { value: "no-action", label: "No action" },
-  { value: "restrict", label: "Restrict" },
-  { value: "cascade", label: "Cascade" },
-  { value: "set-null", label: "Set null" },
-  { value: "set-default", label: "Set default" },
-];
+export type AuthoringMode = "guided" | "manual";
 
-type AuthoringMode = "guided" | "manual";
+interface GuidedEditorProps {
+  draft?: GuidedDraftV1;
+  mode?: AuthoringMode;
+  manualContent?: ReactNode;
+  problemsContent?: ReactNode;
+  onDraftChange?: (draft: GuidedDraftV1) => void;
+  onModeChange?: (mode: AuthoringMode) => void;
+}
 
 function nextOrdinal(items: Array<{ creationOrdinal: number }>) {
   return items.reduce(
@@ -52,27 +48,36 @@ function parseReferenceValue(
   return { tableDraftId, columnDraftId };
 }
 
-export function GuidedEditor() {
-  const [mode, setMode] = useState<AuthoringMode>("guided");
-  const [draft, setDraft] = useState<GuidedDraftV1>(() =>
+export function GuidedEditor({
+  draft: controlledDraft,
+  mode: controlledMode,
+  manualContent,
+  problemsContent,
+  onDraftChange,
+  onModeChange,
+}: GuidedEditorProps = {}) {
+  const [internalMode, setInternalMode] = useState<AuthoringMode>("guided");
+  const [internalDraft, setInternalDraft] = useState<GuidedDraftV1>(() =>
     createGuidedDraft("commerce-schema"),
   );
+  const mode = controlledMode ?? internalMode;
+  const draft = controlledDraft ?? internalDraft;
   const [announcement, setAnnouncement] = useState(
     "Guided mode ready with one protected table.",
   );
   const nextTableOrdinalRef = useRef(nextOrdinal(draft.tables));
   const nextColumnOrdinalByTableRef = useRef(new Map<string, number>());
-  const serialization = useMemo(
-    () => serializeGuidedDraftToPostgresSql(draft),
-    [draft],
-  );
 
   const updateDraft = (update: (next: GuidedDraftV1) => void) => {
-    setDraft((current) => {
-      const next = structuredClone(current);
-      update(next);
-      return next;
-    });
+    const next = structuredClone(draft);
+    update(next);
+    if (controlledDraft === undefined) setInternalDraft(next);
+    onDraftChange?.(next);
+  };
+
+  const setMode = (next: AuthoringMode) => {
+    if (controlledMode === undefined) setInternalMode(next);
+    onModeChange?.(next);
   };
 
   const addTable = (insertAfterIndex: number) => {
@@ -121,52 +126,6 @@ export function GuidedEditor() {
     );
   };
 
-  const deleteColumn = (tableIndex: number, columnIndex: number) => {
-    const column = draft.tables[tableIndex]?.columns[columnIndex];
-    if (!column) return;
-    updateDraft((next) => {
-      next.tables[tableIndex]!.columns.splice(columnIndex, 1);
-      for (const table of next.tables) {
-        for (const candidate of table.columns) {
-          if (candidate.references?.columnDraftId === column.id) {
-            candidate.references = null;
-          }
-        }
-      }
-    });
-    setAnnouncement("Column deleted.");
-  };
-
-  const moveColumn = (
-    tableIndex: number,
-    columnIndex: number,
-    direction: -1 | 1,
-  ) => {
-    const targetIndex = columnIndex + direction;
-    const table = draft.tables[tableIndex];
-    if (!table || targetIndex < 0 || targetIndex >= table.columns.length) return;
-    updateDraft((next) => {
-      const columns = next.tables[tableIndex]!.columns;
-      const [column] = columns.splice(columnIndex, 1);
-      columns.splice(targetIndex, 0, column!);
-    });
-    setAnnouncement(
-      `Column moved ${direction === -1 ? "up" : "down"}.`,
-    );
-  };
-
-  const handleRowKeyDown = (
-    event: KeyboardEvent<HTMLDivElement>,
-    tableIndex: number,
-    columnIndex: number,
-  ) => {
-    if (!event.altKey || !["ArrowUp", "ArrowDown"].includes(event.key)) {
-      return;
-    }
-    event.preventDefault();
-    moveColumn(tableIndex, columnIndex, event.key === "ArrowUp" ? -1 : 1);
-  };
-
   return (
     <div className={styles.editor}>
       <div className={styles.modeBar}>
@@ -192,13 +151,13 @@ export function GuidedEditor() {
         </div>
         <span className={styles.modeHelp}>
           {mode === "guided"
-            ? "Structured fields generate SQL. Alt+Up/Down reorders columns"
-            : "Manual editing will be available with Monaco"}
+            ? "Structured fields are parsed as PostgreSQL SQL"
+            : "PostgreSQL SQL with live diagnostics"}
         </span>
       </div>
 
       {mode === "manual" ? (
-        <section className={styles.manualPlaceholder} aria-labelledby="manual-title">
+        manualContent ?? <section className={styles.manualPlaceholder} aria-labelledby="manual-title">
           <h3 id="manual-title">Manual SQL</h3>
           <p>
             Monaco is not part of this slice. Your Guided draft remains intact when
@@ -216,14 +175,7 @@ export function GuidedEditor() {
                   table={table}
                   tableIndex={tableIndex}
                   onAddColumn={() => addColumn(tableIndex)}
-                  onDeleteColumn={(columnIndex) => deleteColumn(tableIndex, columnIndex)}
                   onDeleteTable={() => deleteTable(tableIndex)}
-                  onMoveColumn={(columnIndex, direction) =>
-                    moveColumn(tableIndex, columnIndex, direction)
-                  }
-                  onRowKeyDown={(event, columnIndex) =>
-                    handleRowKeyDown(event, tableIndex, columnIndex)
-                  }
                   onUpdate={(update) =>
                     updateDraft((next) => update(next.tables[tableIndex]!, next))
                   }
@@ -240,40 +192,9 @@ export function GuidedEditor() {
               </div>
             ))}
           </div>
-
-          <section className={styles.preview} aria-labelledby="generated-sql-title">
-            <div className={styles.previewHeader}>
-              <div>
-                <h3 id="generated-sql-title">Generated SQL</h3>
-                <p>Read-only preview. Canonical validation is still required.</p>
-              </div>
-              <span className={styles.previewState}>
-                {serialization.status === "generated" ? "Ready to validate" : "Incomplete draft"}
-              </span>
-            </div>
-            {serialization.status === "generated" ? (
-              <textarea
-                className={styles.sqlPreview}
-                aria-label="Generated PostgreSQL SQL preview"
-                readOnly
-                spellCheck={false}
-                value={serialization.output.source}
-              />
-            ) : (
-              <div className={styles.issues} role="status">
-                <p>Complete the required draft fields to generate SQL.</p>
-                <ul>
-                  {serialization.issues.map((issue, index) => (
-                    <li key={`${issue.tableDraftId}-${issue.columnDraftId ?? "table"}-${issue.code}-${index}`}>
-                      <code>{issue.code}</code> {issue.message}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </section>
         </div>
       )}
+      {problemsContent}
       <p className={styles.srOnly} aria-live="polite">{announcement}</p>
     </div>
   );
@@ -284,20 +205,14 @@ function TableBlock({
   table,
   tableIndex,
   onAddColumn,
-  onDeleteColumn,
   onDeleteTable,
-  onMoveColumn,
-  onRowKeyDown,
   onUpdate,
 }: {
   draft: GuidedDraftV1;
   table: GuidedTableDraft;
   tableIndex: number;
   onAddColumn: () => void;
-  onDeleteColumn: (columnIndex: number) => void;
   onDeleteTable: () => void;
-  onMoveColumn: (columnIndex: number, direction: -1 | 1) => void;
-  onRowKeyDown: (event: KeyboardEvent<HTMLDivElement>, columnIndex: number) => void;
   onUpdate: (update: (table: GuidedTableDraft, draft: GuidedDraftV1) => void) => void;
 }) {
   const label = table.name.value || `Untitled table ${tableIndex + 1}`;
@@ -333,8 +248,8 @@ function TableBlock({
       </div>
 
       <div className={styles.columnHeader} aria-hidden="true">
-        <span>Column</span><span>Type</span><span>Null</span><span>Default</span>
-        <span>Keys</span><span>Reference</span><span>Actions</span>
+        <span>Column</span><span>Type</span><span>Not null</span>
+        <span>Primary key</span><span>Unique</span><span>Reference</span>
       </div>
       {table.columns.length === 0 ? (
         <p className={styles.emptyColumns}>No columns yet. Add a column to define this table.</p>
@@ -346,10 +261,6 @@ function TableBlock({
               column={column}
               columnIndex={columnIndex}
               draft={draft}
-              table={table}
-              onDelete={() => onDeleteColumn(columnIndex)}
-              onKeyDown={(event) => onRowKeyDown(event, columnIndex)}
-              onMove={(direction) => onMoveColumn(columnIndex, direction)}
               onUpdate={(update) =>
                 onUpdate((nextTable, nextDraft) =>
                   update(nextTable.columns[columnIndex]!, nextDraft),
@@ -373,19 +284,11 @@ function ColumnRow({
   column,
   columnIndex,
   draft,
-  table,
-  onDelete,
-  onKeyDown,
-  onMove,
   onUpdate,
 }: {
   column: GuidedColumnDraft;
   columnIndex: number;
   draft: GuidedDraftV1;
-  table: GuidedTableDraft;
-  onDelete: () => void;
-  onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
-  onMove: (direction: -1 | 1) => void;
   onUpdate: (update: (column: GuidedColumnDraft, draft: GuidedDraftV1) => void) => void;
 }) {
   const reference = referenceValue(column.references);
@@ -393,17 +296,13 @@ function ColumnRow({
     <div
       className={styles.columnRow}
       data-guided-draft-id={column.id}
-      onKeyDown={onKeyDown}
       aria-label={`Column ${columnIndex + 1}`}
     >
       <label><span className={styles.srOnly}>Column name</span><input aria-label={`Column ${columnIndex + 1} name`} placeholder="column_name" value={column.name.value} onChange={(event) => onUpdate((next) => { next.name.value = event.target.value; })} /></label>
       <label><span className={styles.srOnly}>PostgreSQL type</span><input aria-label={`Column ${columnIndex + 1} type`} placeholder="text" value={column.dataType} onChange={(event) => onUpdate((next) => { next.dataType = event.target.value; })} /></label>
-      <label className={styles.compactField}><span>Nullable</span><input type="checkbox" checked={column.nullable} onChange={(event) => onUpdate((next) => { next.nullable = event.target.checked; })} /></label>
-      <label><span className={styles.srOnly}>Default expression</span><input aria-label={`Column ${columnIndex + 1} default expression`} placeholder="none" value={column.defaultExpression ?? ""} onChange={(event) => onUpdate((next) => { next.defaultExpression = event.target.value || null; })} /></label>
-      <div className={styles.keyFields}>
-        <label><input type="checkbox" checked={column.primaryKey} onChange={(event) => onUpdate((next) => { next.primaryKey = event.target.checked; })} /> PK</label>
-        <label><input type="checkbox" checked={column.unique} onChange={(event) => onUpdate((next) => { next.unique = event.target.checked; })} /> UQ</label>
-      </div>
+      <label className={styles.compactField}><span>Not null</span><input type="checkbox" checked={!column.nullable} onChange={(event) => onUpdate((next) => { next.nullable = !event.target.checked; })} /></label>
+      <label className={styles.compactField}><span>Primary key</span><input type="checkbox" checked={column.primaryKey} onChange={(event) => onUpdate((next) => { next.primaryKey = event.target.checked; })} /></label>
+      <label className={styles.compactField}><span>Unique</span><input type="checkbox" checked={column.unique} onChange={(event) => onUpdate((next) => { next.unique = event.target.checked; })} /></label>
       <label>
         <span className={styles.srOnly}>Reference target</span>
         <select
@@ -433,25 +332,6 @@ function ColumnRow({
           )}
         </select>
       </label>
-      <div className={styles.rowActions}>
-        <label>
-          <span className={styles.srOnly}>On delete</span>
-          <select aria-label={`Column ${columnIndex + 1} on delete`} disabled={!column.references} value={column.references?.onDelete ?? "no-action"} onChange={(event) => onUpdate((next) => { if (next.references) next.references.onDelete = event.target.value as ReferentialAction; })}>
-            {REFERENTIAL_ACTIONS.map((action) => <option key={action.value} value={action.value}>{action.label}</option>)}
-          </select>
-        </label>
-        <label>
-          <span className={styles.srOnly}>On update</span>
-          <select aria-label={`Column ${columnIndex + 1} on update`} disabled={!column.references} value={column.references?.onUpdate ?? "no-action"} onChange={(event) => onUpdate((next) => { if (next.references) next.references.onUpdate = event.target.value as ReferentialAction; })}>
-            {REFERENTIAL_ACTIONS.map((action) => <option key={action.value} value={action.value}>{action.label}</option>)}
-          </select>
-        </label>
-        <div className={styles.reorderActions}>
-          <button type="button" aria-label={`Move column ${columnIndex + 1} up`} disabled={columnIndex === 0} onClick={() => onMove(-1)}>Up</button>
-          <button type="button" aria-label={`Move column ${columnIndex + 1} down`} disabled={columnIndex === table.columns.length - 1} onClick={() => onMove(1)}>Down</button>
-          <button type="button" aria-label={`Delete column ${columnIndex + 1}`} onClick={onDelete}>Delete</button>
-        </div>
-      </div>
     </div>
   );
 }

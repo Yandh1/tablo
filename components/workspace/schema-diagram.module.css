@@ -1,0 +1,21 @@
+.diagram { position: relative; min-width: 0; min-height: 0; height: 100%; background: var(--canvas); }
+.loading, .emptyDiagram { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; gap: 5px; text-align: center; color: var(--text-muted); font-size: 12px; pointer-events: none; }
+.emptyDiagram strong { color: var(--text-primary); font-size: 13px; }
+.fitButton { position: absolute; z-index: 5; top: 10px; right: 10px; min-height: 30px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text-primary); box-shadow: 0 1px 2px rgb(15 23 42 / .08); cursor: pointer; padding: 0 10px; font-size: 11px; font-weight: 600; }
+.fitButton:hover { background: var(--surface-secondary); }
+.staleNotice { position: absolute; z-index: 6; top: 10px; left: 10px; border: 1px solid #d4a72c; border-radius: 4px; background: #fff8c5; color: #6e4c00; padding: 6px 8px; font-size: 10px; font-weight: 650; }
+.tableNode { width: 250px; overflow: hidden; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface); box-shadow: 0 2px 8px rgb(15 23 42 / .08); color: var(--text-primary); }
+.tableNode[data-draft] { border-style: dashed; }
+.nodeHeader { display: flex; min-height: 36px; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--border); background: var(--surface-secondary); padding: 7px 9px; }
+.nodeHeader strong { min-width: 0; overflow: hidden; font-family: var(--font-geist-mono), monospace; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.nodeHeader span { color: var(--text-muted); font-size: 9px; font-weight: 700; text-transform: uppercase; }
+.nodeColumns { padding: 4px 0; }
+.nodeColumn { display: grid; min-height: 26px; grid-template-columns: 24px minmax(0, 1fr) minmax(60px, auto) 22px; gap: 5px; align-items: center; padding: 3px 9px; font-size: 10px; }
+.nodeColumn:hover { background: var(--surface-secondary); }
+.keyMark, .uniqueMark { color: var(--accent); font-size: 8px; font-weight: 750; }
+.columnName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nodeColumn code { min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: 9px; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.emptyNode { margin: 0; padding: 12px 9px; color: var(--text-muted); font-size: 10px; }
+.handle { width: 7px !important; height: 7px !important; border: 1px solid var(--surface) !important; background: var(--accent) !important; }
+
+@media (prefers-color-scheme: dark) { .staleNotice { border-color: #9e7b22; background: #352d12; color: #f0d77a; } }
