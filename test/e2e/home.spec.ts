@@ -74,8 +74,12 @@ test("loads Monaco and renders parsed table nodes with a fit control", async ({ 
   await page.getByRole("radio", { name: "Manual SQL" }).click();
   await expect(page.locator(".monaco-editor")).toBeVisible();
   await expect(page.getByText("Valid", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("schema-diagram").getByText("users", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("schema-diagram").getByText("orders", { exact: true })).toBeVisible();
+  const diagram = page.getByTestId("schema-diagram");
+  await expect(diagram.getByText("users", { exact: true })).toBeVisible();
+  await expect(diagram.getByText("orders", { exact: true })).toBeVisible();
+  await expect(diagram.getByLabel("Primary key").first()).toBeVisible();
+  await expect(diagram.getByLabel("Foreign key")).toBeVisible();
+  await expect(diagram.getByLabel("Unique")).toBeVisible();
   await page.getByRole("button", { name: "Fit diagram" }).click();
 });
 
@@ -83,6 +87,7 @@ test("parses GuidedDraft SQL through the workspace parser", async ({ page }) => 
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
 
+  await expect(page.getByTestId("schema-diagram").getByText("Draft", { exact: true })).toBeVisible();
   await page.getByRole("textbox", { name: "Table 1 name" }).fill("users");
   await page.getByRole("button", { name: "Add column" }).click();
   await page.getByRole("textbox", { name: "Column 1 name" }).fill("id");
@@ -91,6 +96,7 @@ test("parses GuidedDraft SQL through the workspace parser", async ({ page }) => 
 
   await expect(page.getByText("Valid", { exact: true })).toBeVisible();
   await expect(page.getByTestId("schema-diagram").getByText("users", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("schema-diagram").getByText("Draft", { exact: true })).toBeHidden();
 });
 
 test("keeps the last valid diagram visible when Manual SQL becomes invalid", async ({ page }) => {

@@ -14,17 +14,34 @@ describe("diagram projection", () => {
     userId.dataType = "uuid";
     userId.primaryKey = true;
     users.columns.push(userId);
+    const email = createGuidedColumnDraft(users, 1);
+    email.name.value = "email";
+    email.dataType = "text";
+    email.unique = true;
+    users.columns.push(email);
     const orders = createGuidedTableDraft(draft, 1);
     orders.name.value = "orders";
     const ownerId = createGuidedColumnDraft(orders, 0);
     ownerId.name.value = "user_id";
     ownerId.dataType = "uuid";
+    ownerId.primaryKey = true;
+    ownerId.unique = true;
     ownerId.references = { tableDraftId: users.id, columnDraftId: userId.id, onDelete: "no-action", onUpdate: "no-action" };
     orders.columns.push(ownerId);
     draft.tables.push(orders);
+    draft.tables.push(createGuidedTableDraft(draft, 2));
 
     const graph = projectGuidedDraftForDiagram(draft);
-    expect(graph.nodes.map((node) => node.data.label)).toEqual(["users", "orders"]);
+    expect(graph.nodes.map((node) => node.data.label)).toEqual(["users", "orders", "Untitled table"]);
+    expect(graph.nodes[0]!.data.columns.map((column) => column.name)).toEqual(["id", "email"]);
+    expect(graph.nodes[0]!.data.draft).toBe(false);
+    expect(graph.nodes[1]!.data.columns[0]).toMatchObject({
+      primaryKey: true,
+      foreignKey: true,
+      unique: true,
+    });
+    expect(graph.nodes[1]!.data.draft).toBe(false);
+    expect(graph.nodes[2]!.data.draft).toBe(true);
     expect(graph.edges).toEqual([expect.objectContaining({ source: orders.id, target: users.id, label: "FK" })]);
   });
 

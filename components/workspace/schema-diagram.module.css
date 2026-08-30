@@ -10,9 +10,9 @@
 .nodeHeader strong { min-width: 0; overflow: hidden; font-family: var(--font-geist-mono), monospace; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .nodeHeader span { color: var(--text-muted); font-size: 9px; font-weight: 700; text-transform: uppercase; }
 .nodeColumns { padding: 4px 0; }
-.nodeColumn { display: grid; min-height: 26px; grid-template-columns: 24px minmax(0, 1fr) minmax(60px, auto) 22px; gap: 5px; align-items: center; padding: 3px 9px; font-size: 10px; }
+.nodeColumn { display: grid; min-height: 26px; grid-template-columns: minmax(24px, auto) minmax(0, 1fr) minmax(60px, auto); gap: 6px; align-items: center; padding: 3px 9px; font-size: 10px; }
 .nodeColumn:hover { background: var(--surface-secondary); }
-.keyMark, .uniqueMark { color: var(--accent); font-size: 8px; font-weight: 750; }
+.keyMarks { display: flex; min-width: 24px; gap: 3px; color: var(--accent); font-size: 8px; font-weight: 750; }
 .columnName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nodeColumn code { min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: 9px; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
 .emptyNode { margin: 0; padding: 12px 9px; color: var(--text-muted); font-size: 10px; }

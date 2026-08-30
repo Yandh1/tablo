@@ -50,12 +50,13 @@ function TableNodeView({ data }: NodeProps<TableNode>) {
         <div className={styles.nodeColumns}>
           {data.columns.map((column) => (
             <div className={styles.nodeColumn} key={column.id}>
-              <span className={styles.keyMark} aria-label={column.primaryKey ? "Primary key" : column.foreignKey ? "Foreign key" : undefined}>
-                {column.primaryKey ? "PK" : column.foreignKey ? "FK" : ""}
+              <span className={styles.keyMarks}>
+                {column.primaryKey ? <span aria-label="Primary key">PK</span> : null}
+                {column.foreignKey ? <span aria-label="Foreign key">FK</span> : null}
+                {column.unique ? <span aria-label="Unique">UQ</span> : null}
               </span>
               <span className={styles.columnName} title={column.name}>{column.name}</span>
               <code title={column.type}>{column.type}</code>
-              {column.unique ? <span className={styles.uniqueMark} title="Unique">UQ</span> : null}
             </div>
           ))}
         </div>
@@ -71,13 +72,24 @@ function layoutPosition(index: number) {
   return { x: 32 + (index % 2) * 330, y: 32 + Math.floor(index / 2) * 250 };
 }
 
+function isIncompleteGuidedTable(
+  table: GuidedDraftV1["tables"][number],
+) {
+  return table.name.value.trim().length === 0
+    || table.columns.length === 0
+    || table.columns.some(
+      (column) => column.name.value.trim().length === 0
+        || column.dataType.trim().length === 0,
+    );
+}
+
 export function projectGuidedDraftForDiagram(draft: GuidedDraftV1): { nodes: TableNode[]; edges: Edge[] } {
   const nodes: TableNode[] = draft.tables.map((table, index) => ({
     id: table.id,
     type: "table",
     position: layoutPosition(index),
     data: {
-      draft: true,
+      draft: isIncompleteGuidedTable(table),
       label: table.name.value || "Untitled table",
       columns: table.columns.map((column) => ({
         id: column.id,
