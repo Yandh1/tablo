@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "4.8.0-rc.3",
-    "@supabase/pg-parser": "^0.1.7",
+    "@supabase/pg-parser": "0.1.7",
     "@xyflow/react": "^12.11.5",
     "drizzle-orm": "^0.45.2",
     "elkjs": "^0.12.0",

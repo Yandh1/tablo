@@ -15,7 +15,7 @@ importers:
         specifier: 4.8.0-rc.3
         version: 4.8.0-rc.3(monaco-editor@0.56.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@supabase/pg-parser':
-        specifier: ^0.1.7
+        specifier: 0.1.7
         version: 0.1.7
       '@xyflow/react':
         specifier: ^12.11.5
