@@ -79,6 +79,22 @@ describe("guided editor", () => {
     expect(screen.queryByRole("button", { name: /Edit properties/ })).not.toBeInTheDocument();
   });
 
+  it("removes a column and returns the table to its reachable empty state", async () => {
+    const user = userEvent.setup();
+    const onDraftChange = vi.fn<(draft: GuidedDraftV1) => void>();
+    render(<GuidedEditor onDraftChange={onDraftChange} />);
+
+    await user.click(screen.getByRole("button", { name: /Add column/ }));
+    expect(screen.getByRole("textbox", { name: "Column 1 name" })).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Delete column 1" }));
+
+    expect(screen.queryByRole("textbox", { name: "Column 1 name" })).not.toBeInTheDocument();
+    expect(screen.getByText("No columns yet. Add a column to define this table.")).toBeVisible();
+    expect(onDraftChange.mock.calls.at(-1)![0].tables[0]!.columns).toHaveLength(0);
+    expect(screen.getByRole("button", { name: /Add column/ })).toBeVisible();
+  });
+
   it("retains a default across type changes and diagnoses a known incompatible preset", async () => {
     const user = userEvent.setup();
     render(<GuidedEditor />);

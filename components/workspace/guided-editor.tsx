@@ -393,7 +393,7 @@ function TableBlock({
           </div>
 
           <div className={styles.columnSectionHeader} aria-hidden="true">
-            <span>Name</span><span>Type</span><span>Default</span><span>PK</span><span>NN</span><span>UQ</span><span>Reference</span>
+            <span>Name</span><span>Type</span><span>Default</span><span>PK</span><span>NN</span><span>UQ</span><span>Reference</span><span>Actions</span>
           </div>
           {table.columns.length === 0
             ? <p className={styles.emptyColumns}>No columns yet. Add a column to define this table.</p>
@@ -405,6 +405,15 @@ function TableBlock({
                   draft={draft}
                   issues={issues.filter((issue) => issue.columnDraftId === column.id)}
                   onUpdate={(update) => onUpdate((nextTable, nextDraft) => update(nextTable.columns[columnIndex]!, nextDraft))}
+                  onDelete={() => onUpdate((nextTable, nextDraft) => {
+                    const [removedColumn] = nextTable.columns.splice(columnIndex, 1);
+                    if (!removedColumn) return;
+                    for (const candidateTable of nextDraft.tables) {
+                      for (const candidateColumn of candidateTable.columns) {
+                        if (candidateColumn.references?.columnDraftId === removedColumn.id) candidateColumn.references = null;
+                      }
+                    }
+                  })}
                 />
               ))}</div>}
           <div className={styles.tableFooter}>
@@ -549,11 +558,12 @@ function TypeCombobox({ columnIndex, value, onChange }: {
   );
 }
 
-function ColumnRow({ column, columnIndex, draft, issues, onUpdate }: {
+function ColumnRow({ column, columnIndex, draft, issues, onDelete, onUpdate }: {
   column: GuidedColumnDraft;
   columnIndex: number;
   draft: GuidedDraftV1;
   issues: GuidedDraftIssue[];
+  onDelete: () => void;
   onUpdate: (update: (column: GuidedColumnDraft, draft: GuidedDraftV1) => void) => void;
 }) {
   const reference = referenceValue(column.references);
@@ -599,6 +609,15 @@ function ColumnRow({ column, columnIndex, draft, issues, onUpdate }: {
             )))}
           </select>
       </label>
+      <button
+        className={styles.deleteColumnButton}
+        type="button"
+        aria-label={`Delete column ${column.name.value || columnIndex + 1}`}
+        title="Delete column"
+        onClick={onDelete}
+      >
+        <span aria-hidden="true">×</span>
+      </button>
       {defaultWarning ? <small className={styles.rowWarning} id={`${defaultListId}-warning`} role="status">{defaultWarning}</small> : null}
       {actionableIssue ? <small className={styles.rowError} role="alert">{actionableIssue.message}</small> : null}
     </div>
