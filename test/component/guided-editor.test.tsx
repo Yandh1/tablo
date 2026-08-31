@@ -21,12 +21,11 @@ async function chooseType(
 }
 
 describe("guided editor", () => {
-  it("starts with one protected structural table shell and a visible table-name label", () => {
+  it("starts with one protected compact table shell and a visible table-name label", () => {
     const { container } = render(<GuidedEditor />);
 
-    expect(screen.getByText("CREATE TABLE")).toBeInTheDocument();
     expect(screen.getByText("Protected first table")).toBeInTheDocument();
-    expect(screen.getByText("Table name")).toBeVisible();
+    expect(screen.getByText("Table")).toBeVisible();
     expect(screen.getByRole("textbox", { name: "Table 1 name" })).toHaveAttribute("placeholder", "e.g. orders");
     expect(screen.queryByRole("button", { name: "Delete table" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Add column/ })).toBeVisible();
@@ -77,6 +76,7 @@ describe("guided editor", () => {
     expect(screen.getByLabelText("Not null")).toBeVisible();
     expect(screen.getByLabelText("Unique")).toBeVisible();
     expect(screen.getByRole("combobox", { name: "Column 1 reference target" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: /Edit properties/ })).not.toBeInTheDocument();
   });
 
   it("retains a default across type changes and diagnoses a known incompatible preset", async () => {

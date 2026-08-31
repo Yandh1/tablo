@@ -150,6 +150,13 @@ function tableKeySummary(table: GuidedTableDraft) {
   return parts.length > 0 ? parts.join(" ") : "No keys";
 }
 
+function referenceLabel(reference: GuidedReferenceDraft | null, draft: GuidedDraftV1) {
+  if (!reference) return "Reference";
+  const table = draft.tables.find((candidate) => candidate.id === reference.tableDraftId);
+  const column = table?.columns.find((candidate) => candidate.id === reference.columnDraftId);
+  return `${table?.name.value || "Untitled table"}.${column?.name.value || "untitled_column"}`;
+}
+
 export function GuidedEditor({
   draft: controlledDraft,
   mode: controlledMode,
@@ -366,9 +373,8 @@ function TableBlock({
 
       {expanded ? (
         <div className={styles.tableContent} id={contentId}>
-          <div className={styles.structuralIntro}><code aria-hidden="true">CREATE TABLE</code><span>Structural SQL is generated from these fields.</span></div>
           <div className={styles.tableNameGroup}>
-            <label htmlFor={tableNameId}>Table name</label>
+            <label htmlFor={tableNameId}>Table</label>
             <div className={styles.tableNameControl}>
               <code aria-hidden="true">public.</code>
               <input
@@ -383,12 +389,12 @@ function TableBlock({
                 onChange={(event) => onUpdate((nextTable) => { nextTable.name.value = event.target.value; })}
               />
             </div>
-            <p className={tableNameIssue ? styles.fieldError : styles.fieldHint} id={messageId}>
-              {tableNameIssue?.message ?? "Used in generated SQL and the diagram label."}
-            </p>
+            {tableNameIssue ? <p className={styles.fieldError} id={messageId}>{tableNameIssue.message}</p> : null}
           </div>
 
-          <div className={styles.columnSectionHeader}><span>Columns</span><span>Name and type remain visible at every pane width.</span></div>
+          <div className={styles.columnSectionHeader} aria-hidden="true">
+            <span>Name</span><span>Type</span><span>Default</span><span>PK</span><span>NN</span><span>UQ</span><span>Reference</span>
+          </div>
           {table.columns.length === 0
             ? <p className={styles.emptyColumns}>No columns yet. Add a column to define this table.</p>
             : <div className={styles.columns}>{table.columns.map((column, columnIndex) => (
@@ -397,6 +403,7 @@ function TableBlock({
                   column={column}
                   columnIndex={columnIndex}
                   draft={draft}
+                  issues={issues.filter((issue) => issue.columnDraftId === column.id)}
                   onUpdate={(update) => onUpdate((nextTable, nextDraft) => update(nextTable.columns[columnIndex]!, nextDraft))}
                 />
               ))}</div>}
@@ -419,6 +426,7 @@ function TypeCombobox({ columnIndex, value, onChange }: {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [modifiersOpen, setModifiersOpen] = useState(false);
   const selection = parsePostgresTypeSelection(value);
   const filteredOptions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -434,6 +442,7 @@ function TypeCombobox({ columnIndex, value, onChange }: {
     onChange(formatPostgresTypeSelection({ option, length: "", precision: "", scale: "", timePrecision: "" }));
     setOpen(false);
     setQuery("");
+    setModifiersOpen(option.modifier !== null);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -467,7 +476,7 @@ function TypeCombobox({ columnIndex, value, onChange }: {
 
   return (
     <div className={styles.typeField}>
-      <label htmlFor={`${listboxId}-input`}>Type</label>
+      <label className={styles.srOnly} htmlFor={`${listboxId}-input`}>Type</label>
       <div className={styles.comboboxShell}>
         <input
           id={`${listboxId}-input`}
@@ -513,44 +522,54 @@ function TypeCombobox({ columnIndex, value, onChange }: {
               ))}
           </div>
         ) : null}
+        {selection?.option.modifier ? (
+          <button
+            className={styles.modifierButton}
+            type="button"
+            aria-expanded={modifiersOpen}
+            aria-label={`Edit ${selection.option.canonicalName} type options for column ${columnIndex + 1}`}
+            onClick={() => setModifiersOpen((current) => !current)}
+          >
+            {value.includes("(") ? value.slice(value.indexOf("(")) : "Options"}
+          </button>
+        ) : null}
+        {modifiersOpen && selection?.option.modifier ? (
+          <div className={styles.modifierPopover} role="group" aria-label={`${selection.option.canonicalName} type options`}>
+            {selection.option.modifier === "length" ? <label className={styles.modifierField}><span>Length</span><input aria-label={`Column ${columnIndex + 1} type length`} inputMode="numeric" min="1" type="number" value={selection.length} onChange={(event) => updateModifier({ length: event.target.value })} /></label> : null}
+            {selection.option.modifier === "precision-scale" ? <div className={styles.modifierPair}>
+              <label className={styles.modifierField}><span>Precision</span><input aria-label={`Column ${columnIndex + 1} type precision`} inputMode="numeric" min="1" type="number" value={selection.precision} onChange={(event) => updateModifier({ precision: event.target.value })} /></label>
+              <label className={styles.modifierField}><span>Scale</span><input aria-label={`Column ${columnIndex + 1} type scale`} inputMode="numeric" min="0" type="number" value={selection.scale} onChange={(event) => updateModifier({ scale: event.target.value })} /></label>
+            </div> : null}
+            {selection.option.modifier === "time-precision" ? <label className={styles.modifierField}><span>Precision</span><input aria-label={`Column ${columnIndex + 1} time precision`} inputMode="numeric" max="6" min="0" type="number" value={selection.timePrecision} onChange={(event) => updateModifier({ timePrecision: event.target.value })} /></label> : null}
+            <button className={styles.modifierDone} type="button" onClick={() => setModifiersOpen(false)}>Done</button>
+          </div>
+        ) : null}
       </div>
-
-      {selection?.option.modifier === "length" ? <label className={styles.modifierField}><span>Length</span><input aria-label={`Column ${columnIndex + 1} type length`} inputMode="numeric" min="1" type="number" value={selection.length} onChange={(event) => updateModifier({ length: event.target.value })} /></label> : null}
-      {selection?.option.modifier === "precision-scale" ? <div className={styles.modifierPair}>
-        <label className={styles.modifierField}><span>Precision</span><input aria-label={`Column ${columnIndex + 1} type precision`} inputMode="numeric" min="1" type="number" value={selection.precision} onChange={(event) => updateModifier({ precision: event.target.value })} /></label>
-        <label className={styles.modifierField}><span>Scale</span><input aria-label={`Column ${columnIndex + 1} type scale`} inputMode="numeric" min="0" type="number" value={selection.scale} onChange={(event) => updateModifier({ scale: event.target.value })} /></label>
-      </div> : null}
-      {selection?.option.modifier === "time-precision" ? <label className={styles.modifierField}><span>Time precision</span><input aria-label={`Column ${columnIndex + 1} time precision`} inputMode="numeric" max="6" min="0" type="number" value={selection.timePrecision} onChange={(event) => updateModifier({ timePrecision: event.target.value })} /></label> : null}
     </div>
   );
 }
 
-function ColumnRow({ column, columnIndex, draft, onUpdate }: {
+function ColumnRow({ column, columnIndex, draft, issues, onUpdate }: {
   column: GuidedColumnDraft;
   columnIndex: number;
   draft: GuidedDraftV1;
+  issues: GuidedDraftIssue[];
   onUpdate: (update: (column: GuidedColumnDraft, draft: GuidedDraftV1) => void) => void;
 }) {
-  const [propertiesOpen, setPropertiesOpen] = useState(false);
   const reference = referenceValue(column.references);
   const defaultListId = useId();
   const defaultSuggestions = defaultSuggestionsForPostgresType(column.dataType);
   const defaultWarning = guidedDefaultCompatibilityMessage(column.dataType, column.defaultExpression);
-  const activePropertyCount = [!column.nullable, column.primaryKey, column.unique, column.defaultExpression !== null, column.references !== null].filter(Boolean).length;
+  const actionableIssue = issues.find((issue) => !issueIsIncomplete(issue));
 
   return (
-    <div className={styles.columnRow} data-guided-draft-id={column.id} data-properties-open={propertiesOpen || undefined} aria-label={`Column ${columnIndex + 1}`}>
-      <div className={styles.columnPrimary}>
-        <label className={styles.fieldGroup}><span>Name</span><input aria-label={`Column ${columnIndex + 1} name`} placeholder="e.g. user_id" value={column.name.value} onChange={(event) => onUpdate((next) => { next.name.value = event.target.value; })} /></label>
-        <TypeCombobox columnIndex={columnIndex} value={column.dataType} onChange={(dataType) => onUpdate((next) => { next.dataType = dataType; })} />
-      </div>
-      <button className={styles.propertiesToggle} type="button" aria-expanded={propertiesOpen} onClick={() => setPropertiesOpen((current) => !current)}>
-        Edit properties <span>{activePropertyCount > 0 ? `${activePropertyCount} active` : "None active"}</span>
-      </button>
-      <div className={styles.columnProperties}>
+    <div className={styles.columnRow} data-guided-draft-id={column.id} aria-label={`Column ${columnIndex + 1}`}>
+      <label className={`${styles.fieldGroup} ${styles.nameField}`}><span className={styles.srOnly}>Name</span><input aria-label={`Column ${columnIndex + 1} name`} placeholder="column_name" value={column.name.value} onChange={(event) => onUpdate((next) => { next.name.value = event.target.value; })} /></label>
+      <TypeCombobox columnIndex={columnIndex} value={column.dataType} onChange={(dataType) => onUpdate((next) => { next.dataType = dataType; })} />
+      <div className={styles.defaultCell}>
         {column.dataType ? (
           <label className={`${styles.fieldGroup} ${styles.defaultField}`}>
-            <span>Default</span>
+            <span className={styles.srOnly}>Default</span>
             <input
               aria-describedby={defaultWarning ? `${defaultListId}-warning` : undefined}
               aria-label={`Column ${columnIndex + 1} default expression`}
@@ -560,17 +579,14 @@ function ColumnRow({ column, columnIndex, draft, onUpdate }: {
               onChange={(event) => onUpdate((next) => { next.defaultExpression = event.target.value || null; })}
             />
             {defaultSuggestions.length > 0 ? <datalist id={defaultListId}>{defaultSuggestions.map((suggestion) => <option key={suggestion.value} value={suggestion.value}>{suggestion.label}</option>)}</datalist> : null}
-            <small>PostgreSQL expression. It is parsed as text and never executed.</small>
-            {defaultWarning ? <small className={styles.fieldWarning} id={`${defaultListId}-warning`} role="status">{defaultWarning}</small> : null}
           </label>
-        ) : null}
-        <div className={styles.constraintFields} role="group" aria-label={`Column ${columnIndex + 1} constraints`}>
-          <label className={styles.compactField}><input type="checkbox" checked={column.primaryKey} onChange={(event) => onUpdate((next) => { next.primaryKey = event.target.checked; })} /><span>Primary key</span></label>
-          <label className={styles.compactField}><input type="checkbox" checked={!column.nullable} onChange={(event) => onUpdate((next) => { next.nullable = !event.target.checked; })} /><span>Not null</span></label>
-          <label className={styles.compactField}><input type="checkbox" checked={column.unique} onChange={(event) => onUpdate((next) => { next.unique = event.target.checked; })} /><span>Unique</span></label>
-        </div>
-        <label className={`${styles.fieldGroup} ${styles.referenceField}`}>
-          <span>Reference</span>
+        ) : <span className={styles.disabledDefault} aria-label={`Select a type to set a default for column ${columnIndex + 1}`}>Select type</span>}
+      </div>
+      <label className={styles.compactField} title="Primary key"><input aria-label="Primary key" type="checkbox" checked={column.primaryKey} onChange={(event) => onUpdate((next) => { next.primaryKey = event.target.checked; })} /><span className={styles.srOnly}>Primary key</span></label>
+      <label className={styles.compactField} title="Not null"><input aria-label="Not null" type="checkbox" checked={!column.nullable} onChange={(event) => onUpdate((next) => { next.nullable = !event.target.checked; })} /><span className={styles.srOnly}>Not null</span></label>
+      <label className={styles.compactField} title="Unique"><input aria-label="Unique" type="checkbox" checked={column.unique} onChange={(event) => onUpdate((next) => { next.unique = event.target.checked; })} /><span className={styles.srOnly}>Unique</span></label>
+      <label className={styles.referenceField} title={referenceLabel(column.references, draft)}>
+          <span className={styles.referenceIcon} aria-hidden="true">↗</span>
           <select aria-label={`Column ${columnIndex + 1} reference target`} value={reference} onChange={(event) => {
             const target = parseReferenceValue(event.target.value);
             onUpdate((next) => { next.references = target ? { ...target, onDelete: "no-action", onUpdate: "no-action" } : null; });
@@ -582,8 +598,9 @@ function ColumnRow({ column, columnIndex, draft, onUpdate }: {
               </option>
             )))}
           </select>
-        </label>
-      </div>
+      </label>
+      {defaultWarning ? <small className={styles.rowWarning} id={`${defaultListId}-warning`} role="status">{defaultWarning}</small> : null}
+      {actionableIssue ? <small className={styles.rowError} role="alert">{actionableIssue.message}</small> : null}
     </div>
   );
 }
