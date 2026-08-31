@@ -67,6 +67,37 @@ test("fills the desktop workspace and restores focus after full-workspace mode",
   expect(restoredEditorBox?.width).toBeLessThan(700);
 });
 
+test("keeps React Flow fixed while Guided Draft grows and only enlarges it on expansion", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+
+  const diagram = page.getByTestId("schema-diagram");
+  const guidedScroll = page.getByTestId("guided-scroll-region");
+  const initialDiagramBox = await diagram.boundingBox();
+  if (!initialDiagramBox) throw new Error("Diagram viewport was not measurable");
+
+  for (let index = 0; index < 10; index += 1) {
+    await page.getByRole("button", { name: "Add table from footer" }).click();
+  }
+
+  await expect(diagram.locator('[data-node-source="guided-draft"]')).toHaveCount(11);
+  const grownDraftDiagramBox = await diagram.boundingBox();
+  expect(grownDraftDiagramBox?.width).toBeCloseTo(initialDiagramBox.width, 0);
+  expect(grownDraftDiagramBox?.height).toBeCloseTo(initialDiagramBox.height, 0);
+
+  const scrollMetrics = await guidedScroll.evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+  }));
+  expect(scrollMetrics.scrollHeight).toBeGreaterThan(scrollMetrics.clientHeight);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(800);
+
+  await page.getByRole("button", { name: "Expand diagram pane" }).click();
+  const expandedDiagramBox = await diagram.boundingBox();
+  expect(expandedDiagramBox?.width).toBeGreaterThan(initialDiagramBox.width + 500);
+  expect(expandedDiagramBox?.height).toBeCloseTo(initialDiagramBox.height, 0);
+});
+
 test("loads Monaco and renders parsed table nodes with a fit control", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
@@ -87,16 +118,78 @@ test("parses GuidedDraft SQL through the workspace parser", async ({ page }) => 
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
 
-  await expect(page.getByTestId("schema-diagram").getByText("Draft", { exact: true })).toBeVisible();
+  const diagram = page.getByTestId("schema-diagram");
+  const provisionalNode = diagram.locator('[data-node-source="guided-draft"]');
+  await expect(diagram.getByText("Draft", { exact: true })).toBeVisible();
+  await expect(provisionalNode).toContainText("Untitled table");
+
   await page.getByRole("textbox", { name: "Table 1 name" }).fill("users");
+  await expect(provisionalNode).toContainText("users");
   await page.getByRole("button", { name: "Add column" }).click();
   await page.getByRole("textbox", { name: "Column 1 name" }).fill("id");
-  await page.getByRole("textbox", { name: "Column 1 type" }).fill("uuid");
+  await expect(provisionalNode).toContainText("id");
+  await page.getByRole("combobox", { name: "Column 1 type" }).fill("uuid");
+  await page.getByRole("option", { name: /^uuid/ }).click();
   await page.getByLabel("Primary key").check();
 
   await expect(page.getByText("Valid", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("schema-diagram").getByText("users", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("schema-diagram").getByText("Draft", { exact: true })).toBeHidden();
+  await expect(diagram.getByText("users", { exact: true })).toBeVisible();
+  await expect(diagram.locator('[data-node-source="parsed-schema"]')).toBeVisible();
+  await expect(diagram.locator('[data-node-source="guided-draft"]')).toHaveCount(0);
+  await expect(diagram.getByText("Draft", { exact: true })).toBeHidden();
+});
+
+test("keeps a dragged table position while Guided text changes", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+
+  const node = page.getByTestId("schema-diagram").locator(
+    '[data-node-source="guided-draft"]',
+  );
+  const before = await node.boundingBox();
+  if (!before) throw new Error("Guided table node was not measurable");
+
+  await page.mouse.move(before.x + before.width / 2, before.y + 18);
+  await page.mouse.down();
+  await page.mouse.move(before.x + before.width / 2 + 90, before.y + 78, {
+    steps: 6,
+  });
+  await page.mouse.up();
+
+  const dragged = await node.boundingBox();
+  if (!dragged) throw new Error("Dragged table node was not measurable");
+  expect(dragged.x).toBeGreaterThan(before.x + 50);
+  expect(dragged.y).toBeGreaterThan(before.y + 30);
+
+  await page.getByRole("textbox", { name: "Table 1 name" }).fill("users");
+  await expect(node).toContainText("users");
+  const updated = await node.boundingBox();
+  expect(updated?.x).toBeCloseTo(dragged.x, 0);
+  expect(updated?.y).toBeCloseTo(dragged.y, 0);
+});
+
+test("refocuses the diagram after deleting an added table", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+
+  await page.getByRole("button", { name: /Add table/ }).last().click();
+  await page.getByRole("button", { name: /Add table/ }).last().click();
+
+  const diagram = page.getByTestId("schema-diagram");
+  const tableNodes = diagram.locator('[data-node-source="guided-draft"]');
+  const viewport = diagram.locator(".react-flow__viewport");
+  await expect(tableNodes).toHaveCount(3);
+  await page.waitForTimeout(500);
+
+  await diagram.hover();
+  await page.mouse.wheel(0, -1200);
+  await page.waitForTimeout(300);
+  const zoomedTransform = await viewport.getAttribute("style");
+
+  await page.getByRole("button", { name: "Delete table" }).last().click();
+  await expect(tableNodes).toHaveCount(2);
+  await expect.poll(() => viewport.getAttribute("style"))
+    .not.toBe(zoomedTransform);
 });
 
 test("keeps the last valid diagram visible when Manual SQL becomes invalid", async ({ page }) => {

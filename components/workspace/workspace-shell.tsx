@@ -139,7 +139,11 @@ export function WorkspaceShell({ projectName }: { projectName: string }) {
   const problems = mode === "manual" ? parseState.diagnostics : [];
   const problemStatus = mode === "guided" && serialization.status !== "generated" ? "invalid" : parseState.status;
   const editor = <GuidedEditor draft={draft} mode={mode} onDraftChange={setDraft} onModeChange={setMode} manualContent={<ManualEditor diagnostics={problems} source={source} onSourceChange={setSource} />} problemsContent={mode === "manual" ? <ProblemsPanel diagnostics={problems} status={problemStatus} /> : null} />;
-  const diagram = <SchemaDiagram draft={draft} mode={mode} schema={parseState.lastValidSchema} stale={parseState.stale} />;
+  const guidedCanonical = mode === "guided"
+    && serialization.status === "generated"
+    && parseState.status === "valid"
+    && !parseState.stale;
+  const diagram = <SchemaDiagram draft={draft} guidedCanonical={guidedCanonical} mode={mode} schema={parseState.lastValidSchema} stale={parseState.stale} />;
 
   return (
     <div className={styles.shell}>

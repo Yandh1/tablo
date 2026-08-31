@@ -19,6 +19,7 @@
     "db:seed": "node --env-file-if-exists=.env --experimental-strip-types --no-warnings=MODULE_TYPELESS_PACKAGE_JSON db/seed.mts"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@monaco-editor/react": "4.8.0-rc.3",
     "@supabase/pg-parser": "0.1.7",
     "@xyflow/react": "^12.11.5",

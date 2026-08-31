@@ -28,51 +28,9 @@ import type {
   AdapterToken,
   Pg17VendorAdapter,
 } from "./vendor-contract";
+import { resolveBuiltInPostgresType } from "./type-catalog";
 
 const PUBLIC_NAMESPACE_ID = namespaceId("public");
-
-const BUILT_IN_TYPES: Readonly<Record<string, string>> = {
-  bit: "bit",
-  bool: "boolean",
-  boolean: "boolean",
-  bpchar: "character",
-  bytea: "bytea",
-  char: "character",
-  cidr: "cidr",
-  date: "date",
-  decimal: "numeric",
-  float4: "real",
-  float8: "double precision",
-  inet: "inet",
-  int2: "smallint",
-  int4: "integer",
-  int8: "bigint",
-  integer: "integer",
-  interval: "interval",
-  json: "json",
-  jsonb: "jsonb",
-  macaddr: "macaddr",
-  macaddr8: "macaddr8",
-  money: "money",
-  name: "name",
-  numeric: "numeric",
-  oid: "oid",
-  real: "real",
-  serial: "serial",
-  serial2: "smallserial",
-  serial4: "serial",
-  serial8: "bigserial",
-  smallint: "smallint",
-  text: "text",
-  time: "time",
-  timestamp: "timestamp",
-  timestamptz: "timestamp with time zone",
-  timetz: "time with time zone",
-  uuid: "uuid",
-  varbit: "bit varying",
-  varchar: "character varying",
-  xml: "xml",
-};
 
 interface ParseContext {
   source: string;
@@ -251,7 +209,7 @@ function elementEndByte(
 function normalizedTypeName(column: AdapterColumn): string | null {
   const parts = column.type.normalizedParts.filter((part) => part !== "pg_catalog");
   const baseName = parts.at(-1)?.toLowerCase();
-  return baseName ? (BUILT_IN_TYPES[baseName] ?? null) : null;
+  return baseName ? resolveBuiltInPostgresType(baseName) : null;
 }
 
 function constraintSpanBytes(

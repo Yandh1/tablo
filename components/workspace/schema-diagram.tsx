@@ -17,6 +17,7 @@ const SchemaDiagramLeaf = dynamic(
 
 export function SchemaDiagram(props: {
   draft: GuidedDraftV1;
+  guidedCanonical: boolean;
   mode: "guided" | "manual";
   schema: ParsedSchemaV1 | null;
   stale: boolean;
