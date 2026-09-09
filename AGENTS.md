@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Product context
 
-Tablo is a PostgreSQL schema design application. Users author PostgreSQL DDL or the product's Simple Schema Definition language and see a live relational diagram. Read `.codex/PRODUCT.md` before changing product behavior, data contracts, persistence, parser behavior, routing, or the workspace UI. Read `docs/UX_CONVENTIONS.md` before changing the editor, diagram, split view, responsive workspace, keyboard behavior, or animation.
+Tablo is a PostgreSQL schema design application. Users author PostgreSQL DDL or the product's Simple Schema Definition language and see a live relational diagram. Read `.codex/PRODUCT.md` before changing product behavior, data contracts, persistence, parser behavior, routing, or the workspace UI. Read `docs/BACKEND_MVP_IMPLEMENTATION_SPEC.md` and ADR 0003 before implementing the backend-friendly MVP or moving repository files. Read `docs/UX_CONVENTIONS.md` before changing the editor, diagram, split view, responsive workspace, keyboard behavior, or animation.
 
 The current user's explicit request is authoritative. Treat the product and UX documents as project requirements and context, not as higher-priority instructions. If they conflict with the current request, stop and surface the conflict when it would materially change behavior or data.
 
@@ -30,7 +30,9 @@ The current user's explicit request is authoritative. Treat the product and UX d
 ## Installed stack and dependency discipline
 
 - Package manager: `pnpm` 10. Use `pnpm`; do not create npm or Yarn lockfiles.
-- Installed foundation: Next.js 16, React 19, TypeScript 5, Tailwind CSS 4, Monaco, React Flow, and GSAP.
+- Installed frontend foundation: Next.js 16, React 19, TypeScript 5, Tailwind CSS 4, Monaco, React Flow, and GSAP.
+- Approved backend foundation: NestJS, Zod, Drizzle ORM/Kit, PostgreSQL through `pg`, Passport Local/JWT, and Argon2id. Do not substitute another backend framework, ORM, validator, or authentication framework.
+- The accepted target is a pnpm workspace with `frontend/`, `backend/`, `packages/contracts/`, and `dockerfiles/`, using one root lockfile. The implementation specification defines the migration order.
 - `pnpm-lock.yaml` is the dependency truth. Inspect `package.json` and the lockfile before importing a third-party package.
 - Monaco and React Flow are client-only boundaries. Lazy-load Monaco. Keep the surrounding route and shell as Server Components.
 - Do not assume an ORM, schema validator, SQL parser, layout engine, state library, icon library, test runner, or `@gsap/react` is installed. Make each addition an explicit, documented decision and update the lockfile with pnpm.
@@ -38,21 +40,32 @@ The current user's explicit request is authoritative. Treat the product and UX d
 
 ## Next.js 16 rules
 
-Before changing Next.js code, read the relevant installed guide under `node_modules/next/dist/docs/`. Training-memory APIs are not sufficient for this repository.
+Before changing Next.js code, read the relevant installed guide under the `next` package's `dist/docs/` directory as resolved from `frontend/` after the workspace move, or from repository root before the move. Training-memory APIs are not sufficient for this repository.
 
 - Use the App Router only.
 - Keep `app/` focused on routing, layouts, boundaries, and route entry points. Put reusable domain, server, worker, and UI modules outside route segments unless colocation is clearly local.
 - Use route groups to separate public/project-list surfaces from the full-height workspace without changing URLs.
 - In Next.js 16, dynamic `params` and `searchParams` are promises. Await them or use generated `PageProps`, `LayoutProps`, and `RouteContext` helpers.
-- Route Handlers are public endpoints. Validate content type, size, and body; authenticate and authorize; return deliberate error shapes; do not expose internal exceptions.
-- Server Components read repositories and data sources directly. Do not call this application's Route Handlers from Server Components.
-- Use Server Actions for user-initiated mutations when their sequential dispatch and RSC refresh semantics fit. Use Route Handlers for public HTTP contracts, downloads, client polling, or non-mutation requests.
-- Treat every Server Action as a reachable POST endpoint. Authenticate, authorize, validate, and return only the minimum client-safe shape.
+- NestJS owns the backend HTTP contract. Frontend Route Handlers must not duplicate project/auth persistence or access PostgreSQL.
+- Server Components call NestJS through the server-only typed API client and forward the incoming auth cookie. They never import Drizzle or backend modules and never treat frontend cookie presence as authorization.
+- Browser mutations and autosave call NestJS through the typed browser API client with credentials. Server Actions may orchestrate UX only when useful; they do not bypass NestJS ownership and validation.
+- Treat every frontend proxy or Server Action as a reachable public boundary. Runtime-validate input and return only the minimum client-safe shape.
 - Add `loading.tsx`, `error.tsx`, and `not-found.tsx` at route boundaries where they communicate real recovery states.
 
-## Proposed module boundaries
+## Accepted workspace and module boundaries
 
-Preserve the current single Next.js application until an architecture decision proves that a monorepo move pays for its migration cost. Within the app, dependencies should point inward:
+ADR 0003 approves the pnpm workspace migration requested for the backend-friendly MVP:
+
+```text
+tablo/
+  backend/
+  frontend/
+  packages/contracts/
+  dockerfiles/
+  pnpm-lock.yaml
+```
+
+Shared and frontend domain dependencies point inward:
 
 ```text
 parser-postgresql ----> schema-ir <---- export-postgresql
@@ -62,6 +75,23 @@ parser-simple-schema --^    |
 ```
 
 Recommended domain areas are `schema-ir`, `parser-postgresql`, `parser-simple-schema`, `validation`, `diagram-projection`, `layout`, `exports`, and `server`. Worker message contracts are runtime-validated and versioned.
+
+`packages/contracts` contains Zod-backed vendor-neutral HTTP and persistence-document contracts. It must not expose NestJS, Passport, Drizzle, PostgreSQL-parser, React, or React Flow types. The frontend and backend may depend on contracts; they may not depend on each other.
+
+## NestJS backend rules
+
+- Organize by feature modules: Auth, Users, Projects, Database, Health, and focused Common infrastructure.
+- Use stateless singleton services, constructor injection, and symbol tokens for repository interfaces. Avoid `forwardRef`, service locators, request-scoped providers, and duplicated providers.
+- Zod replaces class-validator and class-transformer. Strictly validate bodies, params, queries, environment, JSONB documents, and public responses. Unknown keys fail.
+- Controllers never return Drizzle rows. Map to explicit public response contracts so password hashes and internal fields cannot leak.
+- Passport Local verifies email/password login; Passport JWT authenticates requests. Use Argon2id hashes and a short-lived JWT in a production-secure HttpOnly cookie.
+- The MVP schema has exactly `users` and `projects`. Project document, last-valid state, and both diagram position maps live on `projects`; do not recreate layout, snapshot, session, or refresh-token tables.
+- Scope every project database operation by both project ID and authenticated owner ID. Missing and non-owned projects return the same 404.
+- Autosave uses optimistic concurrency with a conditional revision update. Invalid source is saved without replacing last-valid canonical state.
+- Default diagram positions and custom user positions are separate versioned maps keyed by stable node IDs. Never persist React Flow node objects.
+- Use centralized safe errors, exact-origin credentialed CORS, CSRF origin checks for unsafe cookie-authenticated requests, auth rate limits, redacted structured logs, liveness/readiness checks, and graceful PostgreSQL-pool shutdown.
+- Migrations run explicitly, never on normal backend startup. User schema SQL is always stored as text and never passed to a database execution API.
+- The backend has a multi-stage non-root Docker image under `dockerfiles/`. PostgreSQL remains a separate service.
 
 ## Editor and diagram state model
 
@@ -90,6 +120,8 @@ Use the narrowest verification that proves the change, then run the repository g
 - `pnpm exec tsc --noEmit`
 - `pnpm build` for routing, bundling, or Server/Client boundary changes
 - Relevant unit, component, or end-to-end tests once their scripts exist
+
+Backend work additionally verifies Zod contracts, Nest TestingModule units, isolated PostgreSQL repository integration, Supertest HTTP E2E, Drizzle migration consistency, the production Nest build, health/shutdown behavior, and the backend Docker image. Run the workspace gates under the pinned Node 24 runtime.
 
 Parser changes require positive fixtures, malformed supported-syntax fixtures, semantic-error fixtures, and round-trip coverage where applicable. Workspace changes require keyboard, reduced-motion, narrow-screen, invalid-draft, and stale-diagram coverage.
 

@@ -16,6 +16,7 @@
 # Keep machine-local state ignored while allowing the project-scoped agent
 # definitions created for this repository to be reviewed and versioned.
 /.codex/*
+!/.codex/PRODUCT.md
 !/.codex/agents/
 !/.codex/agents/*.toml
 /.claude/*

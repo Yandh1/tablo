@@ -1,9 +1,14 @@
 # ADR 0001: Local PostgreSQL and application migrations
 
-- Status: Accepted
+- Status: Superseded in part by ADR 0003
 - Date: 2026-08-28
 
 ## Context
+
+ADR 0003 supersedes this document's decision to keep application code in a
+single Next.js app and to avoid an application container. The PostgreSQL,
+migration-review, explicit-migration, named-volume, and untrusted-SQL decisions
+remain active.
 
 Tablo needs PostgreSQL for application persistence while Next.js development
 benefits from running directly on the host. Application migrations must remain
